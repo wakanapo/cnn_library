@@ -3,7 +3,7 @@ import pickle
 
 with open("/home/wakana/deep-learning-from-scratch-master/ch07/params.pkl", 'rb') as fr:
     params = pickle.load(fr)
-    with open('../cpp/cnn_weight.hpp', mode='w') as fw:
+    with open('../cnn/cnn_weight.hpp', mode='w') as fw:
         fw.write("#pragma once\n\n")
         fw.write("float w1_raw[] = {")
         for i, out_ch in enumerate(params['W1']):

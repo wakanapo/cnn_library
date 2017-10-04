@@ -3,7 +3,6 @@
 
 #include "read_data.hpp"
 
-
 int reverseInt(int i) {
   unsigned char c1, c2, c3, c4;
   c1 = i & 255;

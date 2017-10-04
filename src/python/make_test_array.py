@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 
-with open('../cpp/test_array.hpp', mode='w') as f:
+with open('../../test/test_array.hpp', mode='w') as f:
     f.write("#pragma once\n\n")
     with open('/home/wakana/deep-learning-from-scratch-master/ch07/Conv1.pkl', 'rb') as fr:
         cnv1 = pickle.load(fr)

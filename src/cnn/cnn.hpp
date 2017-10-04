@@ -1,14 +1,9 @@
 #pragma once
 
-#include "tensor.hpp"
-#include "function.hpp"
-#include "cnn_weight.hpp"
-#include "read_data.hpp"
-
-enum status {
-  TRAIN,
-  TEST
-};
+#include "util/tensor.hpp"
+#include "util/function.hpp"
+#include "cnn/cnn_weight.hpp"
+#include "util/read_data.hpp"
 
 enum activation {
   RELU,
@@ -106,8 +101,8 @@ unsigned long CNN::predict(Tensor<784, 3, float> x) {
 void CNN::run(status st) {
   // This method works on only CPU. It's not supported by Vivado HLS.
   if (st == TEST) {
-    const data test_X = readMnistImages();
-    const data test_y = readMnistLabels();
+    const data test_X = readMnistImages(TEST);
+    const data test_y = readMnistLabels(TEST);
 
     int dim[] = {28, 28, 1};
     Tensor<28*28, 3, float> x(dim);

@@ -1,7 +1,7 @@
-#include "cnn.hpp"
-#include "cnn_weight.hpp"
-#include "function.hpp"
-#include "tensor.hpp"
+#include "cnn/cnn.hpp"
+#include "cnn/cnn_weight.hpp"
+#include "util/function.hpp"
+#include "util/tensor.hpp"
 #include "test_array.hpp"
 #include "gtest/gtest.h"
 

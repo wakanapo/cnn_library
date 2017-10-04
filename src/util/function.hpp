@@ -4,7 +4,7 @@
 #include <cfloat>
 #include <cmath>
 
-#include "tensor.hpp"
+#include "util/tensor.hpp"
 
 class Function {
 public:

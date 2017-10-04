@@ -1,9 +1,10 @@
 #pragma once
 
 enum status {
-  TEST,
-  TRAIN
+  TRAIN,
+  TEST
 };
+
 
 class data {
 public:
