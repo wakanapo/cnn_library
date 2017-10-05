@@ -17,5 +17,5 @@ test: test/util_test.cpp src/util/read_data.cpp
 	$(COMPILER) $(CXXFLAGS) -o utiltest test/util_test.cpp src/util/read_data.cpp -I$(GTEST_INCLUDEDIR) -I$(SRCDIR) -L$(GTEST_LIBDIR) $(CFLAGS) $(TESTFLAGS)
 
 clean:
-	rm -f utiltest test/util_test.o src/util/ead_data.o
+	rm -f utiltest mlp test/util_test.o src/util/read_data.o src/mlp/mlp_main.o
 

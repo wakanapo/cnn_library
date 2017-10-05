@@ -13,14 +13,24 @@
 **MLP**
 ```
 $ make mlp
-```
+
+$ ./mlp test  # 推論の場合
+
+$ ./mlp train  # 学習の場合
+``` 
 **CNN**
 ```
 $ make cnn
+
+$ ./cnn test  # 推論の場合
+
+$ ./cnn train  # 学習の場合
 ```
 **テスト**
 ```
 $ make test
+
+$ ./utiltest
 ```
 **生成されたファイルの削除**
 ```
