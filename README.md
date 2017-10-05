@@ -28,9 +28,9 @@ $ ./cnn train  # 学習の場合
 ```
 **テスト**
 ```
-$ make test
+$ make utest
 
-$ ./utiltest
+$ ./utest
 ```
 **生成されたファイルの削除**
 ```

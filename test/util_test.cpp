@@ -74,6 +74,32 @@ TEST(MatmulTest, Matmul3D) {
   EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), actual.bytes()), 0);
 }
 
+TEST(MatmulTest, Matmul1Dand1D) {
+  float x_raw[] = {1,
+                   2,
+                   3};
+  int x_dim[] = {1, 3};
+  Tensor<3, 2, float> x(x_dim);
+  x.set_v(x_raw);
+
+  float y_raw[] = {1, 2, 3};
+  int y_dim[] = {3, 1};
+  Tensor<3, 2, float> y(y_dim);
+  y.set_v(y_raw);
+
+  float expected_raw[] = {1, 2, 3,
+                          2, 4, 6,
+                          3, 6, 9};
+  int exp_dim[] = {3, 3};
+  Tensor<9, 2, float> expected(exp_dim);
+  expected.set_v(expected_raw);
+  Tensor<9, 2, float> actual(exp_dim);
+
+  Function::matmul(x, y, &actual);
+  EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), actual.bytes()), 0);
+}
+
+
 TEST(TransposeTest, Transpose2D) {
   float x_raw[] = {11, 12, 13,
                    21, 22, 23,

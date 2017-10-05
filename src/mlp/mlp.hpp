@@ -81,6 +81,8 @@ void MLP::train(Tensor<784, 2, float>& x, Tensor<10, 2, float>& t, const float& 
   Tensor<784, 2, float> x_t = x.transpose();
   Function::matmul(x_t, delta1, &dw1);
   Tensor<784, 2, float> x_ones(dim_w1);
+  for (int i = 0; i < 784; ++i)
+    x_ones[i] = 1;
   Tensor<len_b1, 2, float> db1(dim_b1);
   Function::matmul(x_ones, delta1, &db1);
   Tensor<len_w1, 2, float> dw1_n = dw1.times(eps);
@@ -92,6 +94,8 @@ void MLP::train(Tensor<784, 2, float>& x, Tensor<10, 2, float>& t, const float& 
   Tensor<100, 2, float> z1_t = z1.transpose();
   Function::matmul(z1_t, delta2, &dw2);
   Tensor<100, 2, float> z1_ones(dim_w1);
+  for (int i = 0; i < 100; ++i)
+    z1_ones[i] = 1;
   Tensor<len_b2, 2, float> db2(dim_b2);
   Function::matmul(z1_ones, delta2, &db2);
   Tensor<len_w2, 2, float> dw2_n = dw2.times(eps);
