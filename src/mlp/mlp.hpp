@@ -14,6 +14,7 @@ private:
 public:
   MLP() : w1((int*)dim_w1), b1((int*)dim_b1), w2((int*)dim_w2), b2((int*)dim_b2) {};
   void makeWeight();
+  void randomWeight();
   void train();
   unsigned long predict(Tensor<784, 2, float>& x);
   void train(Tensor<784, 2, float>& x, Tensor<10, 2, float>& t, const float& eps);
@@ -25,6 +26,13 @@ void MLP::makeWeight() {
   b1.set_v(b1_);
   w2.set_v(w2_);
   b2.set_v(b2_);
+}
+
+void MLP::randomWeight() {
+  w1.randomInit(-0.08, 0.08);
+  b1.randomInit(-0.08, 0.08);
+  w2.randomInit(-0.08, 0.08);
+  b2.randomInit(-0.08, 0.08);
 }
 
 unsigned long MLP::predict(Tensor<784, 2, float>& x) {
@@ -130,33 +138,39 @@ void MLP::run(status st) {
     const data train_X = readMnistImages(st);
     const data train_y = readMnistLabels(st);
 
+    const data test_X = readMnistImages(TEST);
+    const data test_y = readMnistLabels(TEST);
+
     int x_dim[] = {784, 1};
     Tensor<784, 2, float> x(x_dim);
     int t_dim[] = {10, 1};
     Tensor<10, 2, float> t(t_dim);
     MLP mlp;
+    mlp.randomWeight();
 
-    float eps = 0.8;
-    for (int i = 0; i < train_X.col; ++i) {
-      x.set_v((float*)train_X.ptr + i * x.size(0));
-      t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
-      mlp.train(x, t, eps);
-      break;
+    float eps = 0.02;
+    int epoch = 25;
+    for (int k = 0; k < epoch; ++k) {
+      for (int i = 0; i < train_X.col; ++i) {
+        x.set_v((float*)train_X.ptr + i * x.size(0));
+        t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
+        mlp.train(x, t, eps);
+      }
+      std::cout << "Finish Training!" << std::endl;
+
+      int cnt = 0;
+      for (int i = 0; i < test_X.col; ++i) {
+        x.set_v((float*)test_X.ptr + i * x.size(0));
+        unsigned long y = mlp.predict(x);
+        if (y == ((unsigned long*)test_y.ptr)[i])
+          ++cnt;
+      }
+      std::cout << "Epoc: " << k << std::endl;
+      std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
     }
     free(train_X.ptr);
     free(train_y.ptr);
-    const data test_X = readMnistImages(TEST);
-    const data test_y = readMnistLabels(TEST);
 
-    int cnt = 0;
-    for (int i = 0; i < test_X.col; ++i) {
-      x.set_v((float*)test_X.ptr + i * x.size(0));
-      unsigned long y = mlp.predict(x);
-      printf("predict: %lu, labels: %lu\n", y, ((unsigned long*)test_y.ptr)[i]);
-      if (y == ((unsigned long*)test_y.ptr)[i])
-        ++cnt;
-    }
-    std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
     free(test_X.ptr);
     free(test_y.ptr);
   }
