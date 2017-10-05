@@ -68,3 +68,20 @@ $ make clean
 * 関数内で値が変更される場合はポインタで渡す
 * 関数内で値が変更されない場合は参照渡しにする
 * **型にできるだけ依存しないような実装**をする
+
+## Debug tips
+通常のプリントデバッグやデバッガでのデバッグに加えてValgrindを使うと効果的だったりする。
+
+**Valgrind**
+
+メモリリークとかをチェックしてくれるツール
+
+公式: <http://valgrind.org/>
+
+日本語Wiki: <https://ja.wikipedia.org/wiki/Valgrind>
+
+コマンド：　基本これだけ使っておけばなんとかなる
+```
+valgrind --leak-check=full ./a.out
+```
+
