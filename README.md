@@ -74,7 +74,7 @@ $ make clean
 * スタイルはそんなに厳しく見ないけど、基本的には<https://ttsuki.github.io/styleguide/cppguide.ja.html>に従う
 * 基本的にメンバ変数はprivateにする
 
-### For Perfoemance
+### For Performance
 * 関数内で値が変更される場合はポインタで渡す
 * 関数内で値が変更されない場合は参照渡しにする
 * **型にできるだけ依存しないような実装**をする
