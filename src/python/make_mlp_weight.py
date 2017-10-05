@@ -1,21 +1,20 @@
 import pickle
 import numpy as np
 
-with open('/home/wakana/AIL/chap4/mnist_weight1_100.pickle', mode='rb') as f:
+with open('../../data/mnist_weight1_100.pickle', mode='rb') as f:
     w1 = pickle.load(f)
 
-with open('/home/wakana/AIL/chap4/mnist_weight2_100.pickle', mode='rb') as f:
+with open('../../data/mnist_weight2_100.pickle', mode='rb') as f:
     w2 = pickle.load(f)
 
-with open('/home/wakana/AIL/chap4/mnist_bias1_100.pickle', mode='rb') as f:
+with open('../../data/mnist_bias1_100.pickle', mode='rb') as f:
     b1 = pickle.load(f)
 
-with open('/home/wakana/AIL/chap4/mnist_bias2_100.pickle', mode='rb') as f:
+with open('../../data/mnist_bias2_100.pickle', mode='rb') as f:
     b2 = pickle.load(f)
 
-with open('../cpp/mlp_weight.hpp', mode='w') as f:
+with open('../mlp/mlp_weight.hpp', mode='w') as f:
     f.write("#pragma once\n")
-    f.write('#include "util.hpp"\n')
     f.write("float w1_[] = ")
     f.write("{")
     for i, xs in enumerate(w1):

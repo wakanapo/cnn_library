@@ -1,9 +1,9 @@
 #pragma once
 
-#include "tensor.hpp"
-#include "function.hpp"
-#include "mlp_weight.hpp"
-#include "read_data.hpp"
+#include "util/tensor.hpp"
+#include "util/function.hpp"
+#include "mlp/mlp_weight.hpp"
+#include "util/read_data.hpp"
 
 class MLP {
 private:

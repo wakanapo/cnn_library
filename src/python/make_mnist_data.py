@@ -6,7 +6,7 @@ mnist = fetch_mldata('MNIST original')
 mnist_X, mnist_y = shuffle(mnist.data.astype('float32'),
                            mnist.target.astype('int32'), random_state=42)
 mnist_X = mnist_X / 255.0
-with open('../cpp/mnist_data.hpp', mode='w') as f:
+with open('../mlp/mnist_data.hpp', mode='w') as f:
     f.write("#pragma once\n")
     f.write("float x[{}] = ".format(100*len(mnist_X[0])))
     f.write("{")
