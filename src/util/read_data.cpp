@@ -25,18 +25,18 @@ data readMnistImages(status st) {
   int n_rows = 0;
   int n_cols = 0;
 
-  fread(&magic_number, sizeof(int), 1, fp);
+  size_t err = fread(&magic_number, sizeof(int), 1, fp);
   magic_number = reverseInt(magic_number);
   if (magic_number != 2051) {
     printf("Invalid MNIST image file!\n");
     exit(EXIT_FAILURE);
   }
 
-  fread(&number_of_images, sizeof(int), 1, fp);
+  err = fread(&number_of_images, sizeof(int), 1, fp);
   number_of_images = reverseInt(number_of_images);
-  fread(&n_rows, sizeof(int), 1, fp);
+  err = fread(&n_rows, sizeof(int), 1, fp);
   n_rows = reverseInt(n_rows);
-  fread(&n_cols, sizeof(int), 1, fp);
+  err = fread(&n_cols, sizeof(int), 1, fp);
   n_cols = reverseInt(n_cols);
   int image_size = n_rows * n_cols;
 
@@ -46,7 +46,9 @@ data readMnistImages(status st) {
     for (int i = 0; i < n_rows; ++i) {
       for (int j = 0; j < n_cols; ++j) {
         unsigned char temp = 0;
-        fread(&temp, sizeof(temp), 1, fp);
+        err = fread(&temp, sizeof(temp), 1, fp);
+        if (err < 1)
+          printf("File read error!\n");
         datasets[n * image_size + i * n_cols + j] = (float)temp / 255.0;
       }
     }
@@ -66,20 +68,22 @@ data readMnistLabels(status st) {
 
   int magic_number = 0;
   int number_of_labels = 0;
-  fread(&magic_number, sizeof(int), 1, fp);
+  size_t err = fread(&magic_number, sizeof(int), 1, fp);
   magic_number = reverseInt(magic_number);
   if (magic_number != 2049) {
     printf("Invalid MNIST label file!\n");
     exit(EXIT_FAILURE);
   }
-  fread(&number_of_labels, sizeof(int), 1, fp);
+  err = fread(&number_of_labels, sizeof(int), 1, fp);
   number_of_labels = reverseInt(number_of_labels);
 
   unsigned long* datasets =
     (unsigned long*)malloc(sizeof(unsigned long) * number_of_labels);
   for (int i = 0; i < number_of_labels; ++i) {
     unsigned char temp = 0;
-    fread(&temp, sizeof(temp), 1, fp);
+    err = fread(&temp, sizeof(temp), 1, fp);
+    if (err < 1)
+      printf("File read error!\n");
     datasets[i] = (unsigned long)temp;
   }
   fclose(fp);

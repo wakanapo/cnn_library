@@ -118,6 +118,83 @@ TEST(TransposeTest, Transpose2D) {
   EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), actual.bytes()), 0);
 }
 
+
+TEST(PaddingTest, Padding1) {
+  float x_raw[] = {1, 2, 3,
+                   1, 2, 3,
+                   1, 2, 3};
+  int x_dim[] = {3, 3, 1};
+  Tensor<9, 3, float> x(x_dim);
+  x.set_v(x_raw);
+
+  float expected_raw[] = {0, 0, 0, 0, 0,
+                          0, 1, 2, 3, 0,
+                          0, 1, 2, 3, 0,
+                          0, 1, 2, 3, 0,
+                          0, 0, 0, 0, 0};
+  int exp_dim[] = {5, 5, 1};
+  Tensor<25, 3, float> expected(exp_dim);
+  expected.set_v(expected_raw);
+  Tensor<25, 3, float> actual(exp_dim);
+
+  Function::padding(x, 1, &actual);
+  EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), expected.bytes()), 0);
+}
+
+TEST(PaddingTest, Padding2) {
+  float x_raw[] = {1, 2, 3,
+                   1, 2, 3,
+                   1, 2, 3};
+  int x_dim[] = {3, 3, 1};
+  Tensor<9, 3, float> x(x_dim);
+  x.set_v(x_raw);
+
+  float expected_raw[] = {0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 1, 2, 3, 0, 0,
+                          0, 0, 1, 2, 3, 0, 0,
+                          0, 0, 1, 2, 3, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0};
+  int exp_dim[] = {7, 7, 1};
+  Tensor<49, 3, float> expected(exp_dim);
+  expected.set_v(expected_raw);
+  Tensor<49, 3, float> actual(exp_dim);
+
+  Function::padding(x, 2, &actual);
+  EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), expected.bytes()), 0);
+}
+
+TEST(PaddingTest, Padding3D) {
+  float x_raw[] = {1, 2, 3,
+                   1, 2, 3,
+                   1, 2, 3,
+                   2, 4, 6,
+                   2, 4, 6,
+                   2, 4, 6};
+  int x_dim[] = {3, 3, 2};
+  Tensor<18, 3, float> x(x_dim);
+  x.set_v(x_raw);
+
+  float expected_raw[] = {0, 0, 0, 0, 0,
+                          0, 1, 2, 3, 0,
+                          0, 1, 2, 3, 0,
+                          0, 1, 2, 3, 0,
+                          0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0,
+                          0, 2, 4, 6, 0,
+                          0, 2, 4, 6, 0,
+                          0, 2, 4, 6, 0,
+                          0, 0, 0, 0, 0};
+  int exp_dim[] = {5, 5, 2};
+  Tensor<50, 3, float> expected(exp_dim);
+  expected.set_v(expected_raw);
+  Tensor<50, 3, float> actual(exp_dim);
+
+  Function::padding(x, 1, &actual);
+  EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), expected.bytes()), 0);
+}
+
 TEST(SoftmaxTest, Softmax2D) {
   float x_raw[] = {1, 1, 1,
                    2, 2, 2,
@@ -237,7 +314,7 @@ TEST(ReLUTest, ReLU) {
   EXPECT_EQ(fmemcmp(x.get_v(), expected.get_v(), expected.bytes()), 0);
 }
 
-TEST(Conv2dTest, Padding1) {
+TEST(Conv2dTest, Stride1) {
   float x_raw[] = {1, 1, 1, 0, 0,
                    0, 1, 1, 1, 0,
                    0, 0, 1, 1, 1,
@@ -266,7 +343,7 @@ TEST(Conv2dTest, Padding1) {
   EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), expected.bytes()), 0);
 }
 
-TEST(Conv2dTest, Padding2) {
+TEST(Conv2dTest, Strides2) {
   float x_raw[] = {1, 1, 1, 0, 0,
                    0, 1, 1, 1, 0,
                    0, 0, 1, 1, 1,
@@ -335,6 +412,40 @@ TEST(Conv2dTest, Out3D) {
   EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), expected.bytes()), 0);
 }
 
+TEST(Conv2dTest, Deconv) {
+  float x_raw[] = {0, 1, 2, 3, 4,
+                   5, 6, 7, 8, 9,
+                   10, 11, 12, 13, 14,
+                   15, 16, 17, 18, 19,
+                   20, 21, 22, 23, 24};
+  int x_dim[] = {5, 5, 1};
+  Tensor<25, 3, float> x(x_dim);
+  x.set_v(x_raw);
+
+  float w_raw[] = {0, 1,
+                   2, 3};
+  int w_dim[] = {2, 2, 1, 1};
+  Tensor<4, 4, float> w(w_dim);
+  w.set_v(w_raw);
+
+  int pad_dim[] = {7, 7, 1};
+  Tensor<49, 3, float> pad_conv(pad_dim);
+
+  float expected_raw[] = {0, 0, 1, 2, 3, 4,
+                          0, 7, 13, 19, 25, 21,
+                          10, 37, 43, 49, 55, 41,
+                          20, 67, 73, 79, 85, 61,
+                          30, 97, 103, 109, 115, 81,
+                          40, 102, 107, 112, 117, 72};
+  int exp_dim[] = {6, 6, 1};
+  Tensor<36, 3, float> expected(exp_dim);
+  expected.set_v(expected_raw);
+  Tensor<36, 3, float> actual(exp_dim);
+
+  Function::deconv2d(x, w, &pad_conv, &actual, 1);
+  EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), expected.bytes()), 0);
+}
+
 TEST(MaxPoolTest, Stride1) {
   float x_raw[] = {77, 80, 82, 78, 70,
                    83, 78, 80, 83, 82,
@@ -353,8 +464,10 @@ TEST(MaxPoolTest, Stride1) {
   Tensor<16, 3, float> expected(exp_dim);
   expected.set_v(expected_raw);
   Tensor<16, 3, float> actual(exp_dim);
+  int idx_dim[] = {16};
+  Tensor<16, 1, int> idx(idx_dim);
 
-  Function::max_pool(x, 2, 2, &actual, 1);
+  Function::max_pool(x, 2, 2, &actual, &idx, 1);
   EXPECT_EQ(memcmp(expected.get_v(), actual.get_v(), expected.bytes()), 0);
 }
 
@@ -374,8 +487,10 @@ TEST(MaxPoolTest, Stride2) {
   Tensor<4, 3, float> expected(exp_dim);
   expected.set_v(expected_raw);
   Tensor<4, 3, float> actual(exp_dim);
+  int idx_dim[] = {4};
+  Tensor<4, 1, int> idx(idx_dim);
 
-  Function::max_pool(x, 2, 2, &actual, 2);
+  Function::max_pool(x, 2, 2, &actual, &idx, 2);
   EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), expected.bytes()), 0);
 }
 
@@ -402,8 +517,42 @@ TEST(MaxPoolTest, Out3D) {
   Tensor<8, 3, float> expected(exp_dim);
   expected.set_v(expected_raw);
   Tensor<8, 3, float> actual(exp_dim);
+  int idx_dim[] = {8};
+  Tensor<8, 1, int> idx(idx_dim);
 
-  Function::max_pool(x, 2, 2, &actual, 2);
+  Function::max_pool(x, 2, 2, &actual, &idx, 2);
+  EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), expected.bytes()), 0);
+}
+
+TEST(MaxPoolTest, DepoolStride2) {
+  float before_raw[] = {77, 80, 82, 78, 70,
+                   83, 78, 80, 83, 82,
+                   87, 82, 81, 80, 74,
+                   87, 87, 85, 77, 66,
+                   84, 79, 77, 78, 76};
+  int before_dim[] = {5, 5, 1};
+  Tensor<25, 3, float> before(before_dim);
+  before.set_v(before_raw);
+
+  int x_dim[] = {2, 2, 1};
+  Tensor<4, 3, float> x(x_dim);
+
+  int idx_dim[] = {4};
+  Tensor<4, 1, int> idx(idx_dim);
+
+  Function::max_pool(before, 2, 2, &x, &idx, 2);
+
+  float expected_raw[] = {0, 0, 0, 0, 0,
+                          83, 0, 0, 83, 0,
+                          87, 0, 0, 0, 0,
+                          0, 0, 85, 0, 0,
+                          0, 0, 0, 0, 0};
+  int exp_dim[] = {5, 5, 1};
+  Tensor<25, 3, float> expected(exp_dim);
+  expected.set_v(expected_raw);
+  Tensor<25, 3, float> actual(exp_dim);
+
+  Function::depool(x, idx, &actual);
   EXPECT_EQ(fmemcmp(expected.get_v(), actual.get_v(), expected.bytes()), 0);
 }
 
@@ -431,8 +580,8 @@ TEST(AddTest, AddBias) {
 }
 
 TEST(OperatorTest, Add) {
-    float x_raw[] = {1, 1, 1,
-                     2, 2, 2};
+  float x_raw[] = {1, 1, 1,
+                   2, 2, 2};
   int x_dim[] = {3, 2};
   Tensor<6, 2, float> x(x_dim);
   x.set_v(x_raw);
@@ -515,7 +664,10 @@ TEST(CNNTest, Pool1) {
   int ans_dim[] = {12, 12, 30};
   Tensor<12*12*30, 3, float> ans(ans_dim);
 
-  Function::max_pool(relu1, 2, 2, &ans, 2);
+  int idx_dim[] = {12*12*30};
+  Tensor<12*12*30, 1, int> idx(idx_dim);
+
+  Function::max_pool(relu1, 2, 2, &ans, &idx, 2);
   EXPECT_EQ(fmemcmp(pool1_raw, ans.get_v(), sizeof(pool1_raw)), 0);
 }
 
@@ -636,5 +788,5 @@ TEST(CNNTest, Predict) {
   cnn.makeWeight();
   
   unsigned long y = cnn.predict(x);
-  EXPECT_EQ(y, 7);
+  EXPECT_TRUE(y==7);
 }

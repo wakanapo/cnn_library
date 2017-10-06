@@ -26,10 +26,18 @@ public:
   void conv_layer(Tensor<N, 3, float>& x, Tensor<M, 4, float>& w,
                   Tensor<L, 1, float>& b, Tensor<K, 3, float>* ans);
   template <int N, int M>
-  void pool_layer(Tensor<N, 3, float>& x, Tensor<M, 3, float>* ans);
+  void pool_layer(Tensor<N, 3, float>& x,
+                  Tensor<M, 3, float>* ans, Tensor<M, 1, int>* idx);
   template <int N, int M, int L>
-  void fc_layer(Tensor<N, 2, float>& x, Tensor<M, 2, float>& w, Tensor<L, 2, float>& b,
-                Tensor<L, 2, float>* ans, activation act);
+  void fc_layer(Tensor<N, 2, float>& x, Tensor<M, 2, float>& w,
+                Tensor<L, 2, float>& b, Tensor<L, 2, float>* ans, activation act);
+  void deconv_layer();
+  template <int N, int M>
+  void depool_layer(Tensor<N, 3, float>& before, Tensor<M, 3, float>& after,
+                    Tensor<N, 3, float>* depool);
+  template <int N, int M, int L>
+  void defc_layer(Tensor<N, 2, float>& x, Tensor<M, 2, float>& w,
+                Tensor<L, 2, float>& b, Tensor<L, 2, float>* ans, activation act);
   void train();
   unsigned long predict(Tensor<784, 3, float> x);
   static void run(status st);
@@ -53,8 +61,9 @@ void CNN::conv_layer(Tensor<N, 3, float>& x, Tensor<M, 4, float>& w,
 }
 
 template <int N, int M>
-void CNN::pool_layer(Tensor<N, 3, float>& x, Tensor<M, 3, float>* ans) {
-  Function::max_pool(x, 2, 2, ans, 2);
+void CNN::pool_layer(Tensor<N, 3, float>& x,
+                     Tensor<M, 3, float>* ans, Tensor<M, 1, int>* idx) {
+  Function::max_pool(x, 2, 2, ans, idx, 2);
 }
 
 template <int N, int M, int L>
@@ -69,14 +78,19 @@ void CNN::fc_layer(Tensor<N, 2, float> &x, Tensor<M, 2, float>& w,  Tensor<L, 2,
     Function::softmax(ans);
 }
 
+// void depool_layer(Tensor<N, 3, float>& before, Tensor<M, 3, float>& after,
+//                   Tensor<N, 3, float>* depool);
+
 unsigned long CNN::predict(Tensor<784, 3, float> x) {
   int dim[] = {24, 24, 30};
   Tensor<24*24*30, 3, float> cnv1(dim);
   conv_layer(x, w1, b1, &cnv1);
 
   dim[0] = 12; dim[1] = 12; dim[2] = 30;
+  int idx_dim[] = {12*12*30};
   Tensor<12*12*30, 3, float> pool1(dim);
-  pool_layer(cnv1, &pool1);
+  Tensor<12*12*30, 1, int> idx1(idx_dim);
+  pool_layer(cnv1, &pool1, &idx1);
 
   Tensor<12*12*30, 2, float> dense1 = pool1.flatten();
   dim[0] = 100; dim[1] = 1;
