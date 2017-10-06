@@ -9,17 +9,19 @@
 
 class Function {
 public:
-  template<int N, int M, typename T>
+  template <int N, int M, typename T>
   static void ReLU(Tensor<N, M, T>* t);
-  template<int N, int M, typename T>
+  template <int N, int M, typename T>
+  static void deriv_ReLU(Tensor<N, M, T>* t);
+  template <int N, int M, typename T>
   static void sigmoid(Tensor<N, M, T>* t);
-  template<int N, int M, typename T>
+  template <int N, int M, typename T>
   static void deriv_sigmoid(Tensor<N, M, T>* t);
-  template<int N, int M, typename T>
+  template <int N, int M, typename T>
   static void softmax(Tensor<N, M, T>* t);
-  template<int N, int M, typename T>
+  template <int N, int M, typename T>
   static void deriv_softmax(Tensor<N, M, T>* t);
-  template<int N, int M, typename T, int K, int L>
+  template <int N, int M, typename T, int K, int L>
   static void matmul(Tensor<N, M, T>& t, Tensor<K, M, T>& m, Tensor<L, M, T>* ans);
   template <int N, int M, typename T, int K, int L>
   static void conv2d(Tensor<N, M, T>& t, Tensor<K, M+1, T>& w,
@@ -39,30 +41,36 @@ public:
   static void padding(Tensor<N, M, T>& before, int pad_size, Tensor<L, M, T>* ans);
 };
 
-template<int N, int M, typename T>
+template <int N, int M, typename T>
 void Function::ReLU(Tensor<N, M, T>* t) {
   for (int i = 0; i < N; ++i)
     (*t)[i] = ((*t)[i] > 0) ? (*t)[i] : 0;
 }
 
-template<int N, int M, typename T>
+template <int N, int M, typename T>
+void Function::deriv_ReLU(Tensor<N, M, T>* t) {
+  for (int i = 0; i < N; ++i)
+    (*t)[i] = ((*t)[i] > 0) ? 1 : 0;
+}
+
+template <int N, int M, typename T>
 void Function::sigmoid(Tensor<N, M, T>* t) {
   for (int i = 0; i < N; ++i)
     (*t)[i] = 1 / (1 + exp(-1 * (*t)[i]));
 }
 
-template<typename T>
+template <typename T>
 T uni_sigmoid(T v) {
   return 1 / (1 + exp(-1 * v));
 }
 
-template<int N, int M, typename T>
+template <int N, int M, typename T>
 void Function::deriv_sigmoid(Tensor<N, M, T>* t) {
   for (int i = 0; i < N; ++i)
     (*t)[i] = uni_sigmoid((*t)[i]) * (1 - uni_sigmoid((*t)[i]));
 }
 
-template<int N, int M, typename T>
+template <int N, int M, typename T>
 void Function::softmax(Tensor<N, M, T>* t) {
   int col = t->shape()[1];
   int row = t->shape()[0];
@@ -80,7 +88,7 @@ void Function::softmax(Tensor<N, M, T>* t) {
   }
 }
 
-template<int N, int M, typename T>
+template <int N, int M, typename T>
 void Function::deriv_softmax(Tensor<N, M, T> *t) {
   int col = t->shape()[1];
   int row = t->shape()[0];
@@ -100,7 +108,7 @@ void Function::deriv_softmax(Tensor<N, M, T> *t) {
   }
 }
 
-template<int N, int M, typename T, int K, int L>
+template <int N, int M, typename T, int K, int L>
 void Function::matmul(Tensor<N, M, T>& t, Tensor<K, M, T>& m,
                       Tensor<L, M, T>* ans) {
   int t_col = t.shape()[1];

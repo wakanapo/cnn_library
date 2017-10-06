@@ -314,6 +314,25 @@ TEST(ReLUTest, ReLU) {
   EXPECT_EQ(fmemcmp(x.get_v(), expected.get_v(), expected.bytes()), 0);
 }
 
+TEST(ReLUTest, DerivReLU) {
+  float x_raw[] = {0.1, -0.1, 0.1,
+                   -2, 2, -2,
+                   3, -3, 3};
+  int x_dim[] = {3, 3};
+  Tensor<9, 2, float> x(x_dim);
+  x.set_v(x_raw);
+
+  float expected_raw[] = {1, 0, 1,
+                          0, 1, 0,
+                          1, 0, 1};
+  int exp_dim[] = {3, 3};
+  Tensor<9, 2, float> expected(exp_dim);
+  expected.set_v(expected_raw);
+
+  Function::deriv_ReLU(&x);
+  EXPECT_EQ(fmemcmp(x.get_v(), expected.get_v(), expected.bytes()), 0);
+}
+
 TEST(Conv2dTest, Stride1) {
   float x_raw[] = {1, 1, 1, 0, 0,
                    0, 1, 1, 1, 0,
