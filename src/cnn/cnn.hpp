@@ -22,6 +22,7 @@ private:
 public:
   CNN() : w1((int*)dim_w1), b1((int*)dim_b1), w2((int*)dim_w2), b2((int*)dim_b2), w3((int*)dim_w3), b3((int*)dim_b3) {};
   void makeWeight();
+  void randomWeight();
   template <int N, int M, int L, int K>
   void conv_layer(Tensor<N, 3, float>& x, Tensor<M, 4, float>& w,
                   Tensor<L, 1, float>& b, Tensor<K, 3, float>* ans);
@@ -31,10 +32,10 @@ public:
   template <int N, int M, int L>
   void fc_layer(Tensor<N, 2, float>& x, Tensor<M, 2, float>& w,
                 Tensor<L, 2, float>& b, Tensor<L, 2, float>* ans, activation act);
-  template <int N, int M, int L, int K, int U>
+  template <int N, int M, int L, int K, int U, int S>
   void deconv_layer(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
                     Tensor<L, 4, float>* w, Tensor<U, 1, float>* b,
-                    Tensor<S, 3, float>* pad_conv, Tensor<K, 3, float>* ans
+                    Tensor<S, 3, float>* pad_conv, Tensor<K, 3, float>* ans,
                     const float& eps);
   template <int N, int M>
   void depool_layer(Tensor<N, 3, float>& delta, Tensor<N, 1, int>& idx,
@@ -42,7 +43,7 @@ public:
   template <int N, int M, int L, int S>
   void defc_layer(Tensor<N, 2, float>& delta, Tensor<S, 2, float>& x,
                   Tensor<M, 2, float>* w, Tensor<L, 2, float>* b,
-                  Tensor<L, 2, float>* ans, const float& eps)
+                  Tensor<S, 2, float>* ans, const float& eps);
   void train(Tensor<784, 3, float>& x, Tensor<10, 2, float>& t, const float& eps);
   unsigned long predict(Tensor<784, 3, float>& x);
   static void run(status st);
@@ -55,6 +56,16 @@ void CNN::makeWeight() {
   b2.set_v(b2_raw);
   w3.set_v(w3_raw);
   b3.set_v(b3_raw);
+}
+
+
+void CNN::randomWeight() {
+  w1.randomInit(-0.08, 0.08);
+  b1.randomInit(-0.08, 0.08);
+  w2.randomInit(-0.08, 0.08);
+  b2.randomInit(-0.08, 0.08);
+  w3.randomInit(-0.08, 0.08);
+  b3.randomInit(-0.08, 0.08);
 }
 
 template <int N, int M, int L, int K>
@@ -84,17 +95,17 @@ void CNN::fc_layer(Tensor<N, 2, float> &x, Tensor<M, 2, float>& w,  Tensor<L, 2,
 }
 
 template <int N, int M>
-void depool_layer(Tensor<N, 3, float>& delta, Tensor<N, 1, int>& idx,
+void CNN::depool_layer(Tensor<N, 3, float>& delta, Tensor<N, 1, int>& idx,
                   Tensor<M, 3, float>* ans) {
   Function::depool(delta, idx, ans);
 }
 
-template <int N, int M, int L, int K, int U>
-void deconv_layer(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
-                  Tensor<L, 4, float>* w, Tensor<U, 1, float>* b,
-                  Tensor<S, 3, float>* pad_conv, Tensor<K, 3, float>* ans
-                  const float& eps) {
-  Fuction::deconv2d(x, w, pad_conv, ans, 1);
+template <int N, int M, int L, int K, int U, int S>
+void CNN::deconv_layer(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
+                       Tensor<L, 4, float>* w, Tensor<U, 1, float>* b,
+                       Tensor<S, 3, float>* pad_conv, Tensor<K, 3, float>* ans,
+                       const float& eps) {
+  Function::deconv2d(x, w, pad_conv, ans, 1);
 
   Tensor<U, 1, float> delta_b(b->shape());
   delta_b.init();
@@ -108,33 +119,33 @@ void deconv_layer(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
   int* w_dim = w->shape();
   int* d_dim = delta.shape();
   int* x_dim = x.shape();
-  for (int i = 0; i < w_dim(3); ++i)
-    for (int j = 0; j < w_dim(2); ++j)
-      for (int k = 0; k < w_dim(1); ++k)
-        for (int l = 0; l < w_dim(0); ++l)
+  for (int i = 0; i < w_dim[3]; ++i)
+    for (int j = 0; j < w_dim[2]; ++j)
+      for (int k = 0; k < w_dim[1]; ++k)
+        for (int l = 0; l < w_dim[0]; ++l)
 
           for (int c = 0; c < d_dim[1]; ++c)
             for (int r = 0; r < d_dim[0]; ++r)
               delta_w[i*w_dim[0]*w_dim[1]*w_dim[2] +
                       j*w_dim[0]*w_dim[1] + k*w_dim[0] + l]
                 += delta[i*d_dim[0]*d_dim[1] + c*d_dim[0] + r] *
-                x[j*(dim[1]*dim[0]) + (k+c)*dim[0] + (l+r)];
-  
+                x[j*(x_dim[1]*x_dim[0]) + (k+c)*x_dim[0] + (l+r)];
+
   (*w) = (*w) - delta_w;
   (*b) = (*b) - delta_b;
 }
 
 template <int N, int M, int L, int S>
-void defc_layer(Tensor<N, 2, float>& delta, Tensor<S, 2, float>& x,
+void CNN::defc_layer(Tensor<N, 2, float>& delta, Tensor<S, 2, float>& x,
                 Tensor<M, 2, float>* w, Tensor<L, 2, float>* b,
-                Tensor<L, 2, float>* ans, const float& eps) {
+                Tensor<S, 2, float>* ans, const float& eps) {
   Tensor<M, 2, float> dw(w.shape());
   Tensor<S, 2, float> x_t = x.transpose();
   Function::matmul(x_t, delta, &dw);
   Tensor<100, 2, float> x_ones(x.shape());
   for (int i = 0; i < 100; ++i)
     x_ones[i] = 1;
-  Tensor<L, 2, float> db(dim_b);
+  Tensor<L, 2, float> db(b.shape());
   Function::matmul(x_ones, delta, &db);
   Tensor<M, 2, float> dw_n = dw.times(eps);
   w2 = w2 - dw_n;
@@ -184,7 +195,7 @@ void CNN::train(Tensor<784, 3, float>& x, Tensor<10, 2, float>& t, const float& 
   Tensor<28*28, 3, float> delta_cnv(x.shape());
   int pad_dim[] = {32, 32};
   Tensor<32*32, 3, float> pad_conv(pad_dim);
-  deconv_layer(delta_pool, x, &w1, &b1, &pad_conv, &delta_cnv);
+  deconv_layer(delta_pool, x, &w1, &b1, &pad_conv, &delta_cnv, eps);
 }
 
 unsigned long CNN::predict(Tensor<784, 3, float>& x) {
@@ -238,6 +249,44 @@ void CNN::run(status st) {
         ++cnt;
     }
     std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
+    free(test_X.ptr);
+    free(test_y.ptr);
+  }
+  else if(st == TRAIN) {
+    const data train_X = readMnistImages(st);
+    const data train_y = readMnistLabels(st);
+
+    const data test_X = readMnistImages(TEST);
+    const data test_y = readMnistLabels(TEST);
+
+    int x_dim[] = {28, 28, 1};
+    Tensor<784, 3, float> x(x_dim);
+    int t_dim[] = {10, 1};
+    Tensor<10, 2, float> t(t_dim);
+    CNN cnn;
+    cnn.randomWeight();
+
+    float eps = 10e-8;
+    int epoch = 25;
+    for (int k = 0; k < epoch; ++k) {
+      for (int i = 0; i < train_X.col; ++i) {
+        x.set_v((float*)train_X.ptr + i * x.size(0));
+        t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
+        cnn.train(x, t, eps);
+      }
+      int cnt = 0;
+      for (int i = 0; i < test_X.col; ++i) {
+        x.set_v((float*)test_X.ptr + i * x.size(0));
+        unsigned long y = cnn.predict(x);
+        if (y == ((unsigned long*)test_y.ptr)[i])
+          ++cnt;
+      }
+      std::cout << "Epoc: " << k << std::endl;
+      std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
+    }
+    free(train_X.ptr);
+    free(train_y.ptr);
+
     free(test_X.ptr);
     free(test_y.ptr);
   }

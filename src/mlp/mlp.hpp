@@ -159,8 +159,6 @@ void MLP::run(status st) {
         t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
         mlp.train(x, t, eps);
       }
-      std::cout << "Finish Training!" << std::endl;
-
       int cnt = 0;
       for (int i = 0; i < test_X.col; ++i) {
         x.set_v((float*)test_X.ptr + i * x.size(0));

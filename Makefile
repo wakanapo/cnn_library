@@ -13,9 +13,12 @@ TESTDIR = $(shell pwd)/test
 mlp: src/mlp/mlp_main.cpp src/util/read_data.cpp
 	$(COMPILER) $(CXXFLAGS) -o mlp src/mlp/mlp_main.cpp src/util/read_data.cpp -I$(SRCDIR) $(CFLAGS)
 
+cnn: src/cnn/cnn_main.cpp src/util/read_data.cpp
+	$(COMPILER) $(CXXFLAGS) -o cnn src/cnn/cnn_main.cpp src/util/read_data.cpp -I$(SRCDIR) $(CFLAGS)
+
 utest: test/util_test.cpp src/util/read_data.cpp
 	$(COMPILER) $(CXXFLAGS) -o utest test/util_test.cpp src/util/read_data.cpp -I$(GTEST_INCLUDEDIR) -I$(SRCDIR) -L$(GTEST_LIBDIR) $(CFLAGS) $(TESTFLAGS)
 
 clean:
-	rm -f utest mlp test/util_test.o src/util/read_data.o src/mlp/mlp_main.o
+	rm -f utest mlp cnn test/util_test.o src/util/read_data.o src/mlp/mlp_main.o src/cnn/cnn_main.o
 
