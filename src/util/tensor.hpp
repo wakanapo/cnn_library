@@ -19,6 +19,8 @@ public:
   void randomInit(float low, float high);
   T* get_v();
   Tensor<N, 2, T> flatten();
+  template <int L>
+  Tensor<N, L, T> reshape(int* shape);
   T &operator[](int i);
   Tensor<N, M, T> operator+(Tensor<N, M, T>& other) const;
   Tensor<N, M, T> operator-(Tensor<N, M, T>& other) const;
@@ -128,6 +130,14 @@ template <int N, int M, typename T>
 Tensor<N, 2, T> Tensor<N, M, T>::flatten() {
   int ans_dim[] = {N, 1};
   Tensor<N, 2, T> ans(ans_dim);
+  ans.set_v(v);
+  return ans;
+}
+
+template <int N, int M, typename T>
+template <int L>
+Tensor<N, L, T> Tensor<N, M, T>::reshape(int* shape) {
+  Tensor<N, L, T> ans(shape);
   ans.set_v(v);
   return ans;
 }

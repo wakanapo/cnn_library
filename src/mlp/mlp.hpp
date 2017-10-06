@@ -63,6 +63,7 @@ unsigned long MLP::predict(Tensor<784, 2, float>& x) {
 }
 
 void MLP::train(Tensor<784, 2, float>& x, Tensor<10, 2, float>& t, const float& eps) {
+  // Forward
   int dim_u1[] = {100, 1};
   Tensor<100, 2, float> u1(dim_u1);
   Function::matmul(x, w1, &u1);
@@ -77,7 +78,9 @@ void MLP::train(Tensor<784, 2, float>& x, Tensor<10, 2, float>& t, const float& 
   Tensor<10, 2, float> z2 = u2;
   Function::softmax(&z2);
 
+  // Backward
   Tensor<10, 2, float> delta2 = z2 - t;
+  
   Tensor<100, 2, float> delta1 = u1;
   Tensor<100, 2, float> temp(dim_u1);
   Tensor<len_w2, 2, float> w2_t = w2.transpose();
