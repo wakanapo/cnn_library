@@ -105,7 +105,7 @@ void CNN::deconv_layer(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
                        Tensor<L, 4, float>* w, Tensor<U, 1, float>* b,
                        Tensor<S, 3, float>* pad_conv, Tensor<K, 3, float>* ans,
                        const float& eps) {
-  Function::deconv2d(x, w, pad_conv, ans, 1);
+  Function::deconv2d(x, *w, pad_conv, ans, 1);
 
   Tensor<U, 1, float> delta_b(b->shape());
   delta_b.init();
@@ -139,21 +139,21 @@ template <int N, int M, int L, int S>
 void CNN::defc_layer(Tensor<N, 2, float>& delta, Tensor<S, 2, float>& x,
                 Tensor<M, 2, float>* w, Tensor<L, 2, float>* b,
                 Tensor<S, 2, float>* ans, const float& eps) {
-  Tensor<M, 2, float> dw(w.shape());
+  Tensor<M, 2, float> dw(w->shape());
   Tensor<S, 2, float> x_t = x.transpose();
   Function::matmul(x_t, delta, &dw);
   Tensor<100, 2, float> x_ones(x.shape());
   for (int i = 0; i < 100; ++i)
     x_ones[i] = 1;
-  Tensor<L, 2, float> db(b.shape());
+  Tensor<L, 2, float> db(b->shape());
   Function::matmul(x_ones, delta, &db);
   Tensor<M, 2, float> dw_n = dw.times(eps);
-  w2 = w2 - dw_n;
+  (*w) = (*w) - dw_n;
   Tensor<L, 2, float> db_n = db.times(eps);
-  b2 = b2 - db_n;
+  (*b) = (*b) - db_n;
 
-  Tensor<L, 2, float> temp(ans->shape());
-  Tensor<M, 2, float> w_t = w.transpose();
+  Tensor<S, 2, float> temp(ans->shape());
+  Tensor<M, 2, float> w_t = w->transpose();
   Function::deriv_sigmoid(&delta);
   Function::matmul(delta, w_t, &temp);
   (*ans) = (*ans) * temp;
@@ -188,12 +188,13 @@ void CNN::train(Tensor<784, 3, float>& x, Tensor<10, 2, float>& t, const float& 
   Tensor<12*12*30, 2, float> delta1(dense1.shape());
   defc_layer(delta2, dense1, &w2, &b2, &delta1, eps);
 
-  Tensor<12*12*30, 3, float> delta1_3D = delta1.reshape(pool1.shape());
+  Tensor<12*12*30, 3, float> delta1_3D(pool1.shape());
+  delta1_3D.set_v(delta1.get_v());
   Tensor<24*24*30, 3, float> delta_pool(cnv1.shape());
   depool_layer(delta1_3D, idx1, &delta_pool);
 
   Tensor<28*28, 3, float> delta_cnv(x.shape());
-  int pad_dim[] = {32, 32};
+  int pad_dim[] = {32, 32, 1};
   Tensor<32*32, 3, float> pad_conv(pad_dim);
   deconv_layer(delta_pool, x, &w1, &b1, &pad_conv, &delta_cnv, eps);
 }
