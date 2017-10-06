@@ -6,7 +6,7 @@
 template <int N, int M, typename T>
 class Tensor {
 private:
-  // These initialization is supported by only C++11.
+  // This initialization is supported by only C++11.
   int dim[M] = {};
   T v[N] = {};
 public:
