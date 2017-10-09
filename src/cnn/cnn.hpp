@@ -243,7 +243,7 @@ void CNN::run(status st) {
 
     int cnt = 0;
     for (int i = 0; i < test_X.col; ++i) {
-      x.set_v((float*)test_X.ptr + i * x.size(0));
+      x.set_v((float*)test_X.ptr + i * 28 * x.size(0));
       unsigned long y = cnn.predict(x);
       printf("predict: %lu, labels: %lu\n", y, ((unsigned long*)test_y.ptr)[i]);
       if (y == ((unsigned long*)test_y.ptr)[i])
