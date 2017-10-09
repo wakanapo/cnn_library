@@ -10,27 +10,31 @@
 * scikit-learn
 
 ## ビルド方法
+**ALL**
+```
+$ make -j4
+```
 **MLP**
 ```
-$ make mlp
+$ make bin/mlp
 
-$ ./mlp test  # 推論の場合
+$ ./bin/mlp test  # 推論の場合
 
-$ ./mlp train  # 学習の場合
+$ ./bin/mlp train  # 学習の場合
 ``` 
 **CNN**
 ```
-$ make cnn
+$ make bin/cnn
 
-$ ./cnn test  # 推論の場合
+$ ./bin/cnn test  # 推論の場合
 
-$ ./cnn train  # 学習の場合
+$ ./bin/cnn train  # 学習の場合
 ```
 **テスト**
 ```
-$ make utest
+$ make bin/utest
 
-$ ./utest
+$ ./bin/utest
 ```
 **生成されたファイルの削除**
 ```
