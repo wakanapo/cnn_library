@@ -1,16 +1,40 @@
+#include <cstdio>
+#include <iostream>
+
 #include "cnn/cnn.hpp"
 #include "cnn/cnn_weight.hpp"
 #include "util/function.hpp"
 #include "util/tensor.hpp"
+#include "util/read_data.hpp"
+#include "cnn_init_weight.hpp"
+#include "cnn_new_weight.hpp"
 #include "test_array.hpp"
+#include "backprop_array.hpp"
 #include "gtest/gtest.h"
+
+void debug(float* a, int n) {
+  for (int i = 0; i < n; ++i)
+    std::cout << a[i] << " ";
+  std::cout << std::endl;
+}
 
 int fmemcmp(float* a, float* b, size_t size) {
   for (size_t i = 0 ; i < size / sizeof(float); ++i) {
-    if (std::abs(a[i] - b[i]) > 0.0001)
+    if (std::abs(a[i] - b[i]) > 0.0001) {
+      printf("a[%4lu]=%f, b[%4lu]=%f\n", i, a[i], i, b[i]);
       return i + 1;
+    }
   }
   return 0;
+}
+
+TEST(ReadDataTest, OneHot) {
+  float expected[10] = {};
+  unsigned long t = 2;
+  expected[t] = 1.0;
+
+  float* actual = mnistOneHot(t);
+  EXPECT_EQ(fmemcmp(expected, actual, sizeof(expected)), 0);
 }
 
 TEST(MatmulTest, Matmul2D) {
@@ -808,4 +832,215 @@ TEST(CNNTest, Predict) {
   
   unsigned long y = cnn.predict(x);
   EXPECT_TRUE(y==7);
+}
+
+TEST(BackPropTest, DeAffine2) {
+  int delta3_dim[] = {10, 1};
+  Tensor<10, 2, float> delta3(delta3_dim);
+  delta3.set_v(last_raw);
+  int delta2_dim[] = {100, 1};
+  Tensor<100, 2, float> delta2(delta2_dim);
+
+  int w3_dim[] = {10, 100};
+  Tensor<100*10, 2, float> w3(w3_dim);
+  w3.set_v(iw3_raw);
+  
+  CNN cnn;
+  cnn.back_affine(delta3, w3, &delta2);
+  EXPECT_EQ(fmemcmp(daffine2_raw, delta2.get_v(), sizeof(daffine2_raw)), 0);
+}
+
+TEST(BackPropTest, DeReLU2) {
+  int delta2_dim[] = {100, 1};
+  Tensor<100, 2, float> delta2(delta2_dim);
+  delta2.set_v(daffine2_raw);
+
+  Tensor<100, 2, float> x(delta2_dim);
+  x.set_v(prelu2_raw);
+  
+  CNN cnn;
+  cnn.deactivate_layer(&delta2, x, RELU);
+  EXPECT_EQ(fmemcmp(drelu2_raw, delta2.get_v(), sizeof(drelu2_raw)), 0);
+}
+  
+TEST(BackPropTest, DeAffine1) {
+  int delta2_dim[] = {100, 1};
+  Tensor<100, 2, float> delta2(delta2_dim);
+  delta2.set_v(drelu2_raw);
+  int delta1_dim[] = {12*12*30, 1};
+  Tensor<12*12*30, 2, float> delta1(delta1_dim);
+
+  int w2_dim[] = {100, 12*12*30};
+  Tensor<100*12*12*30, 2, float> w2(w2_dim);
+  w2.set_v(iw2_raw);
+
+  CNN cnn;
+  cnn.back_affine(delta2, w2, &delta1);
+  EXPECT_EQ(fmemcmp(daffine1_raw, delta1.get_v(), sizeof(daffine1_raw)), 0);
+}
+
+TEST(BackPropTest, DePool) {
+  int delta_pool_dim[] = {24, 24, 30};
+  Tensor<24*24*30, 3, float> delta_pool(delta_pool_dim);
+  int delta1_dim[] = {12, 12, 30};
+  Tensor<12*12*30, 3, float> delta1(delta1_dim);
+  delta1.set_v(daffine1_raw);
+
+  int dim[] = {24, 24, 30};
+  Tensor<24*24*30, 3, float> relu1(dim);
+  relu1.set_v(prelu1_raw);
+
+  int ans_dim[] = {12, 12, 30};
+  Tensor<12*12*30, 3, float> ans(ans_dim);
+
+  int idx_dim[] = {12*12*30};
+  Tensor<12*12*30, 1, int> idx(idx_dim);
+  Function::max_pool(relu1, 2, 2, &ans, &idx, 2);
+
+  CNN cnn;
+  cnn.depool_layer(delta1, idx, &delta_pool);
+  EXPECT_EQ(fmemcmp(dpool1_raw, delta_pool.get_v(), sizeof(dpool1_raw)), 0);
+}
+
+TEST(BackPropTest, DeReLU1) {
+  int delta_pool_dim[] = {24, 24, 30};
+  Tensor<24*24*30, 3, float> delta_pool(delta_pool_dim);
+  delta_pool.set_v(dpool1_raw);
+
+  Tensor<24*24*30, 3, float> x(delta_pool_dim);
+  x.set_v(pconv1_raw);
+
+  CNN cnn;
+  cnn.deactivate_layer(&delta_pool, x, RELU);
+  EXPECT_EQ(fmemcmp(drelu1_raw, delta_pool.get_v(), sizeof(drelu1_raw)), 0);
+}
+
+TEST(BackPropTest, DeConv) {
+  int delta_conv_dim[] = {28, 28, 1};
+  Tensor<28*28, 3, float> delta_conv(delta_conv_dim);
+  int delta_relu_dim[] = {24, 24, 30};
+  Tensor<24*24*30, 3, float> delta_relu(delta_relu_dim);
+  delta_relu.set_v(drelu1_raw);
+
+   Tensor<len_iw1, 4, float> w1(dim_iw1);
+  w1.set_v(iw1_raw);
+
+  int pad_dim[] = {32, 32, 30};
+  Tensor<32*32*30, 3, float> pad_conv(pad_dim);
+  CNN cnn;
+  cnn.back_conv(delta_relu, w1, &pad_conv, &delta_conv);
+  EXPECT_EQ(fmemcmp(dconv_raw, delta_conv.get_v(), sizeof(dconv_raw)), 0);
+}
+
+TEST(BackPropTest, w3) {
+  const float eps = 1;
+  int delta3_dim[] = {10, 1};
+  Tensor<10, 2, float> delta3(delta3_dim);
+  delta3.set_v(last_raw);
+  
+  int x_dim[] = {100, 1};
+  Tensor<100, 2, float> x(x_dim);
+  x.set_v(prelu2_raw);
+
+  int w3_dim[] = {10, 100};
+  Tensor<100*10, 2, float> w3(w3_dim);
+  w3.set_v(iw3_raw);
+  
+  CNN cnn;
+  cnn.defc_w(delta3, x, &w3, eps);
+  EXPECT_EQ(fmemcmp(nw3_raw, w3.get_v(), sizeof(nw3_raw)), 0);
+}
+
+
+TEST(BackPropTest, b3) {
+  const float eps = 1;
+  int delta3_dim[] = {10, 1};
+  Tensor<10, 2, float> delta3(delta3_dim);
+  delta3.set_v(last_raw);
+
+  int x_dim[] = {100, 1};
+  Tensor<100, 2, float> x(x_dim);
+  x.set_v(prelu2_raw);
+  
+  int b3_dim[] = {10, 1};
+  Tensor<10, 2, float> b3(b3_dim);
+  b3.set_v(ib3_raw);
+  
+  CNN cnn;
+  cnn.defc_b(delta3, x, &b3, eps);
+  EXPECT_EQ(fmemcmp(nb3_raw, b3.get_v(), sizeof(nb3_raw)), 0);
+}
+
+TEST(BackPropTest, w2) {
+  const float eps = 1;
+  int delta2_dim[] = {100, 1};
+  Tensor<100, 2, float> delta2(delta2_dim);
+  delta2.set_v(drelu2_raw);
+  
+  int x_dim[] = {12*12*30, 1};
+  Tensor<12*12*30, 2, float> x(x_dim);
+  x.set_v(ppool1_raw);
+
+  int w2_dim[] = {100, 12*12*30};
+  Tensor<100*12*12*30, 2, float> w2(w2_dim);
+  w2.set_v(iw2_raw);
+  
+  CNN cnn;
+  cnn.defc_w(delta2, x, &w2, eps);
+  EXPECT_EQ(fmemcmp(nw2_raw, w2.get_v(), sizeof(nw2_raw)), 0);
+}
+
+TEST(BackPropTest, b2) {
+  const float eps = 1;
+  int delta2_dim[] = {100, 1};
+  Tensor<100, 2, float> delta2(delta2_dim);
+  delta2.set_v(drelu2_raw);
+  
+  int x_dim[] = {12*12*30, 1};
+  Tensor<12*12*30, 2, float> x(x_dim);
+  x.set_v(ppool1_raw);
+
+  int b2_dim[] = {100, 1};
+  Tensor<100, 2, float> b2(b2_dim);
+  b2.set_v(ib2_raw);
+  
+  CNN cnn;
+  cnn.defc_b(delta2, x, &b2, eps);
+  EXPECT_EQ(fmemcmp(nb2_raw, b2.get_v(), sizeof(nb2_raw)), 0);
+}
+
+TEST(BackPropTest, w1) {
+  const float eps = 1;
+  int delta1_dim[] = {24, 24, 30};
+  Tensor<24*24*30, 3, float> delta1(delta1_dim);
+  delta1.set_v(drelu1_raw);
+
+  int x_dim[] = {28, 28, 1};
+  Tensor<28*28, 3, float> x(x_dim);
+  x.set_v(px_raw);
+
+  int w1_dim[] = {5, 5, 1, 30};
+  Tensor<5*5*30, 4, float> w1(w1_dim);
+  w1.set_v(iw1_raw);
+  CNN cnn;
+  cnn.deconv_w(delta1, x, &w1, eps);
+  EXPECT_EQ(fmemcmp(nw1_raw, w1.get_v(), sizeof(nw1_raw)), 0);
+}
+
+TEST(BackPropTest, b1) {
+  const float eps = 1;
+  int delta1_dim[] = {24, 24, 30};
+  Tensor<24*24*30, 3, float> delta1(delta1_dim);
+  delta1.set_v(drelu1_raw);
+
+  int x_dim[] = {28, 28, 1};
+  Tensor<28*28, 3, float> x(x_dim);
+  x.set_v(px_raw);
+
+  int b1_dim[] = {30};
+  Tensor<30, 1, float> b1(b1_dim);
+  b1.set_v(ib1_raw);
+  CNN cnn;
+  cnn.deconv_b(delta1, x, &b1, eps);
+  EXPECT_EQ(fmemcmp(nb1_raw, b1.get_v(), sizeof(nb1_raw)), 0);
 }

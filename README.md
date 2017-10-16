@@ -41,6 +41,11 @@ $ ./bin/utest
 $ make clean
 ```
 
+※Stack Overflowした場合
+```
+$ ulimit -s 16384
+```
+
 ## コード構成
 ### src/util
 * function.hpp : 活性化関数や畳込み、プーリングなど基本的な関数が実装されている

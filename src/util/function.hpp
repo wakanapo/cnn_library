@@ -164,12 +164,12 @@ void Function::deconv2d(Tensor<N, M, T>& conv, Tensor<K, M+1, T>& w,
     for (int i = 0; i < ans_dim[1]; ++i)
       for (int j = 0; j < ans_dim[0]; ++j)
 
-        for (int ch = 0; ch < w_dim[2]; ++ch)
+        for (int ch = 0; ch < w_dim[3]; ++ch)
           for (int c = 0; c < w_dim[1]; ++c)
             for (int r = 0; r < w_dim[0]; ++r)
               (*ans)[k*(ans_dim[0]*ans_dim[1]) + i*ans_dim[0] + j] +=
                 (*pad_conv)[ch*(dim[1]*dim[0]) + (i*strides+c)*dim[0] + (j*strides+r)] *
-                w[k*(w_dim[2]*w_dim[1]*w_dim[0]) + ch*(w_dim[1]*w_dim[0])
+                w[ch*(w_dim[2]*w_dim[1]*w_dim[0]) + k*(w_dim[1]*w_dim[0])
                     + (w_dim[1]-1-c)*w_dim[0] + (w_dim[0]-1-r)];
 }
 
@@ -183,7 +183,7 @@ void Function::max_pool(Tensor<N, M, T>& t, int k_col, int k_row,
       for (int j = 0; j < ans_dim[0]; ++j){
 
         // TODO(wakanapo): Make it possible to handle types other than float.
-        float max = FLT_MIN;
+        float max = -FLT_MAX;
         for (int c = 0; c < k_col; ++c)
           for (int r = 0; r < k_row; ++r)
             if (max < t[k*(dim[1]*dim[0]) + (i*strides+c)*dim[0] + (j*strides+r)]) {
