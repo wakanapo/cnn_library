@@ -1,306 +1,125 @@
 #pragma once
 
+#include <fstream>
+#include <iostream>
+#include <string>
+
 #include "util/tensor.hpp"
 #include "util/function.hpp"
-#include "cnn/cnn_weight.hpp"
+#include "cnn/layers.hpp"
 #include "util/read_data.hpp"
+#include "protos/cnn_params.pb.h"
 
-enum activation {
-  RELU,
-  SOFTMAX,
-  SIGMOID,
-  NONE
-};
-
-class CNN {
-private:
-  Tensor<len_w1, 4, float> w1;
-  Tensor<len_b1, 1, float> b1;
-  Tensor<len_w2, 2, float> w2;
-  Tensor<len_b2, 2, float> b2;
-  Tensor<len_w3, 2, float> w3;
-  Tensor<len_b3, 2, float> b3;
+template <typename T>
+class SimpleConvNet {
 public:
-  CNN() : w1((int*)dim_w1), b1((int*)dim_b1), w2((int*)dim_w2), b2((int*)dim_b2), w3((int*)dim_w3), b3((int*)dim_b3) {};
-  void makeWeight();
-  void randomWeight();
-  template <int N, int M, int L, int K>
-  void conv_layer(Tensor<N, 3, float>& x, Tensor<M, 4, float>& w,
-                  Tensor<L, 1, float>& b, Tensor<K, 3, float>* ans);
-  template <int N, int M>
-  void pool_layer(Tensor<N, 3, float>& x,
-                  Tensor<M, 3, float>* ans, Tensor<M, 1, int>* idx);
-  template <int N, int M, int L>
-  void affine_layer(Tensor<N, 2, float>& x, Tensor<M, 2, float>& w,
-                Tensor<L, 2, float>& b, Tensor<L, 2, float>* ans);
-  template <int N, int M>
-  void activate_layer(Tensor<N, M, float>* x, activation act);
-  template <int N, int M, int L, int K, int U, int S>
-  void deconv_layer(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
-                    Tensor<L, 4, float>* w, Tensor<U, 1, float>* b,
-                    Tensor<S, 3, float>* pad_conv, Tensor<K, 3, float>* ans,
-                    const float& eps);
-  template <int N, int M, int L, int K>
-  void back_conv(Tensor<N, 3, float>& delta, Tensor<M, 4, float>& w,
-                    Tensor<L, 3, float>* pad_conv, Tensor<K, 3, float>* ans);
-  template <int N, int M>
-  void depool_layer(Tensor<N, 3, float>& delta, Tensor<N, 1, int>& idx,
-                    Tensor<M, 3, float>* depool);
-  template <int N, int M, int L, int S>
-  void deaffine_layer(Tensor<N, 2, float>& delta, Tensor<S, 2, float>& x,
-                  Tensor<M, 2, float>* w, Tensor<L, 2, float>* b,
-                  Tensor<S, 2, float>* ans, const float& eps);
-  template <int N, int M, int L>
-  void back_affine(Tensor<N, 2, float>& delta, Tensor<M, 2, float>& w,
-                   Tensor<L, 2, float>* ans);
-  template <int N, int M>
-  void deactivate_layer(Tensor<N, M, float>* delta, Tensor<N, M, float>& x, activation act);
-  template <int N, int M, int L>
-  void deconv_w(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
-                    Tensor<L, 4, float>* w, const float& eps);
-  template <int N, int M, int L>
-  void deconv_b(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
-                    Tensor<L, 1, float>* b, const float& eps);
-  template <int N, int M, int L>
-  void defc_w(Tensor<N, 2, float>& delta, Tensor<M, 2, float>& x,
-              Tensor<L, 2, float>* w, const float& eps);
-  template <int N, int M, int L>
-  void defc_b(Tensor<N, 2, float>& delta, Tensor<M, 2, float>& x,
-              Tensor<L, 2, float>* b, const float& eps);
-  void train(Tensor<784, 3, float>& x, Tensor<10, 2, float>& t, const float& eps);
-  unsigned long predict(Tensor<784, 3, float>& x);
-  static void run(status st);
+  SimpleConvNet() : Conv1(Convolution<5, 5, 1, 30, 0, 1, T>((T)0, (T)0.001)),
+                    Affine1(Affine<12*12*30, 100, T>((T)0, (T)0.001)),
+                    Affine2(Affine<100, 10, T>((T)0, (T)0.001)) {};
+  Convolution<5, 5, 1, 30, 0, 1, T> Conv1;
+  Relu<T> Relu1;
+  Pooling<2, 2, 0, 2, T> Pool1;
+  Affine<12*12*30, 100, T> Affine1;
+  Relu<T> Relu2;
+  Affine<100, 10, T> Affine2;
+  Sigmoid<T> Last;
 };
 
-void CNN::makeWeight() {
-  w1.set_v(w1_raw);
-  b1.set_v(b1_raw);
-  w2.set_v(w2_raw);
-  b2.set_v(b2_raw);
-  w3.set_v(w3_raw);
-  b3.set_v(b3_raw);
-}
+template <typename T>
+class DoubleConvNet {
+public:
+  DoubleConvNet() : Conv1(Convolution<5, 5, 1, 20, 0, 1, T>((T)-0.008, (T)0.008)),
+                    Conv2(Convolution<5, 5, 20, 50, 0, 1, T>((T)-0.008, (T)0.008)),
+                    Affine1(Affine<4*4*50, 10, T>((T)-0.008, (T)0.008)) {};
+  Convolution<5, 5, 1, 20, 0, 1, T> Conv1;
+  Relu<T> Relu1;
+  Pooling<2, 2, 0, 2, T> Pool1;
+  Convolution<5, 5, 20, 50, 0, 1, T> Conv2;
+  Relu<T> Relu2;
+  Pooling<2, 2, 0, 2, T> Pool2;
+  Affine<4*4*50, 10, T> Affine1;
+  Softmax<T> Last;
+};
 
+template <typename T>
+class CNN {
+public:
+  void simple_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps);
+  unsigned long simple_predict(Tensor2D<28, 28, T>& x);
+  void dc_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps);
+  unsigned long dc_predict(Tensor2D<28, 28, T>& x);
+  static void run();
+private:
+  SimpleConvNet<T> simple;
+  DoubleConvNet<T> dc;
+};
 
-void CNN::randomWeight() {
-  w1.randomInit(0.0, 0.01);
-  b1.init();
-  w2.randomInit(0.0, 0.01);
-  b2.init();
-  w3.randomInit(0.0, 0.01);
-  b3.init();
-}
+template <typename T>
+void CNN<T>::simple_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps) {
+  // forward
+  Tensor3D<24, 24, 30, T> conv1_ans;
+  simple.Conv1.forward(x, &conv1_ans);
 
-template <int N, int M, int L, int K>
-void CNN::conv_layer(Tensor<N, 3, float>& x, Tensor<M, 4, float>& w,
-                     Tensor<L, 1, float>& b, Tensor<K, 3, float>* ans) {
-  Function::conv2d(x, w, ans, 1);
-  Function::add_bias(ans, b);
-}
+  simple.Relu1.forward(&conv1_ans);
 
-template <int N, int M>
-void CNN::pool_layer(Tensor<N, 3, float>& x,
-                     Tensor<M, 3, float>* ans, Tensor<M, 1, int>* idx) {
-  Function::max_pool(x, 2, 2, ans, idx, 2);
-}
+  Tensor3D<12, 12, 30, T> pool1_ans;
+  Tensor1D<12*12*30, int> idx;
+  simple.Pool1.forward(conv1_ans, &pool1_ans, &idx);
 
-template <int N, int M, int L>
-void CNN::affine_layer(Tensor<N, 2, float>& x, Tensor<M, 2, float>& w,
-                       Tensor<L, 2, float>& b, Tensor<L, 2, float>* ans) {
-  Function::matmul(x, w, ans);
-  (*ans) = (*ans) + b;
-}
+  Tensor1D<12*12*30, T> dense1 = pool1_ans.flatten();
+  Tensor1D<100, T> dense2;
+  simple.Affine1.forward(dense1, &dense2);
 
-template <int N, int M>
-void CNN::activate_layer(Tensor<N, M, float>* x, activation act) {
-  if (act == RELU)
-    Function::ReLU(x);
-  else if (act == SOFTMAX)
-    Function::softmax(x);
-}
+  simple.Relu2.forward(&dense2);
 
-template <int N, int M>
-void CNN::depool_layer(Tensor<N, 3, float>& delta, Tensor<N, 1, int>& idx,
-                  Tensor<M, 3, float>* ans) {
-  Function::depool(delta, idx, ans);
-}
+  Tensor1D<10, T> ans;
+  simple.Affine2.forward(dense2, &ans);
 
-template <int N, int M, int L>
-void CNN::deconv_w(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
-              Tensor<L, 4, float>* w, const float& eps) {
-  Tensor<L, 4, float> delta_w(w->shape());
-  delta_w.init();
-  int* w_dim = w->shape();
-  int* d_dim = delta.shape();
-  int* x_dim = x.shape();
-  for (int i = 0; i < w_dim[3]; ++i)
-    for (int j = 0; j < w_dim[2]; ++j)
-      for (int k = 0; k < w_dim[1]; ++k)
-        for (int l = 0; l < w_dim[0]; ++l)
-
-          for (int c = 0; c < d_dim[1]; ++c)
-            for (int r = 0; r < d_dim[0]; ++r)
-              delta_w[i*w_dim[0]*w_dim[1]*w_dim[2] +
-                      j*w_dim[0]*w_dim[1] + k*w_dim[0] + l]
-                += delta[i*d_dim[0]*d_dim[1] + c*d_dim[0] + r] *
-                x[j*(x_dim[1]*x_dim[0]) + (k+c)*x_dim[0] + (l+r)];
-  
-  delta_w = delta_w.times(eps);
-  (*w) = (*w) - delta_w;
-}
-
-template <int N, int M, int L>
-void CNN::deconv_b(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
-              Tensor<L, 1, float>* b, const float& eps) {
-  Tensor<L, 1, float> delta_b(b->shape());
-  delta_b.init();
-  for (int i = 0; i < delta.size(2); ++i)
-    for (int j = 0; j < delta.size(1); ++j)
-      for (int h = 0; h < delta.size(0); ++h)
-        delta_b[i] = delta_b[i] + delta[i*delta.size(0)*delta.size(1) + j*delta.size(0) + h];
-
-  delta_b = delta_b.times(eps);
-  (*b) = (*b) - delta_b;
-}
-
-template <int N, int M, int L, int K>
-void CNN::back_conv(Tensor<N, 3, float>& delta, Tensor<M, 4, float>& w,
-                    Tensor<L, 3, float>* pad_conv, Tensor<K, 3, float>* ans) {
-  Function::deconv2d(delta, w, pad_conv, ans, 1);
-}
-
-template <int N, int M, int L, int K, int U, int S>
-void CNN::deconv_layer(Tensor<N, 3, float>& delta, Tensor<M, 3, float>& x,
-                       Tensor<L, 4, float>* w, Tensor<U, 1, float>* b,
-                       Tensor<S, 3, float>* pad_conv, Tensor<K, 3, float>* ans,
-                       const float& eps) {
-  back_conv(delta, *w, pad_conv, ans);
-  deconv_w(delta, x, w, eps);
-  deconv_b(delta, x, b, eps);
-}
-
-template <int N, int M, int L>
-void CNN::defc_w(Tensor<N, 2, float>& delta, Tensor<M, 2, float>& x,
-                 Tensor<L, 2, float>* w, const float& eps) {
-  Tensor<L, 2, float> dw(w->shape());
-  Tensor<M, 2, float> x_t = x.transpose();
-  Function::matmul(x_t, delta, &dw);
-  dw = dw.times(eps);
-  (*w) = (*w) - dw;
-}
-
-template <int N, int M, int L>
-void CNN::defc_b(Tensor<N, 2, float>& delta, Tensor<M, 2, float>& x,
-                 Tensor<L, 2, float>* b, const float& eps) {
-  int dim_x_ones[] = {1, 1};
-  Tensor<1, 2, float> x_ones(dim_x_ones);
-  for (int i = 0; i < 1; ++i)
-    x_ones[i] = 1;
-  Tensor<L, 2, float> db(b->shape());
-  Function::matmul(x_ones, delta, &db);
-  
-  db = db.times(eps);
-  (*b) = (*b) - db;
-}
-
-template <int N, int M, int L>
-void CNN::back_affine(Tensor<N, 2, float>& delta, Tensor<M, 2, float>& w,
-                      Tensor<L, 2, float>* ans) {
-  Tensor<M, 2, float> w_t = w.transpose();
-  Function::matmul(delta, w_t, ans);
-}
-
-template <int N, int M, int L, int S>
-void CNN::deaffine_layer(Tensor<N, 2, float>& delta, Tensor<S, 2, float>& x,
-                    Tensor<M, 2, float>* w, Tensor<L, 2, float>* b,
-                    Tensor<S, 2, float>* ans, const float& eps) {
-  back_affine(delta, *w, ans);
-  defc_w(delta, x, w, eps);
-  defc_b(delta, x, b, eps);
-
-}
-
-template <int N, int M>
-void CNN::deactivate_layer(Tensor<N, M, float>* delta, Tensor<N, M, float>& x, activation act) {
-  Tensor<N, M, float> tmp = x;
-  if (act == RELU)
-    Function::deriv_ReLU(&tmp);
-  else if(act == SIGMOID)
-    Function::deriv_sigmoid(&tmp);
-  else if (act == SOFTMAX)
-    Function::deriv_softmax(&tmp);
-  (*delta) = (*delta) * tmp;
-}
-
-void CNN::train(Tensor<784, 3, float>& x, Tensor<10, 2, float>& t, const float& eps) {
-  // Forward
-  int dim[] = {24, 24, 30};
-  Tensor<24*24*30, 3, float> cnv1(dim);
-  conv_layer(x, w1, b1, &cnv1);
-  activate_layer(&cnv1, RELU);
-
-  dim[0] = 12; dim[1] = 12; dim[2] = 30;
-  int idx_dim[] = {12*12*30};
-  Tensor<12*12*30, 3, float> pool1(dim);
-  Tensor<12*12*30, 1, int> idx1(idx_dim);
-  pool_layer(cnv1, &pool1, &idx1);
-
-  Tensor<12*12*30, 2, float> dense1 = pool1.flatten();
-  dim[0] = 100; dim[1] = 1;
-  Tensor<100, 2, float> dense2(dim);
-  affine_layer(dense1, w2, b2, &dense2);
-  activate_layer(&dense2, RELU);
-
-  dim[0] = 10; dim[1] = 1;
-  Tensor<10, 2, float> ans(dim);
-  affine_layer(dense2, w3, b3, &ans);
-  activate_layer(&ans, SOFTMAX);
+  simple.Last.forward(&ans);
 
   // Backward
-  Tensor<10, 2, float> delta3 = ans - t;
-  Tensor<100, 2, float> delta2(dense2.shape());
-  deaffine_layer(delta3, dense2, &w3, &b3, &delta2, eps);
-  deactivate_layer(&delta2, dense2, RELU);
+  Tensor1D<10, T> delta3 = ans - t;
+  Tensor1D<100, T> delta2;
+  simple.Affine2.backward(delta3, dense2, &delta2, eps);
+  simple.Relu2.backward(&delta2, dense2);
 
-  Tensor<12*12*30, 2, float> delta1(dense1.shape());
-  deaffine_layer(delta2, dense1, &w2, &b2, &delta1, eps);
-  
-  Tensor<12*12*30, 3, float> delta1_3D(pool1.shape());
+  Tensor1D<12*12*30, T> delta1;
+  simple.Affine1.backward(delta2, dense1, &delta1, eps);
+
+  Tensor3D<12, 12, 30, T> delta1_3D;
   delta1_3D.set_v(delta1.get_v());
-  Tensor<24*24*30, 3, float> delta_pool(cnv1.shape());
-  depool_layer(delta1_3D, idx1, &delta_pool);
+  Tensor3D<24, 24, 30, T> delta_pool;
+  simple.Pool1.backward(delta1_3D, idx, &delta_pool);
 
-  deactivate_layer(&delta_pool, cnv1, RELU);
-  Tensor<28*28, 3, float> delta_cnv(x.shape());
-  int pad_dim[] = {32, 32, 30};
-  Tensor<32*32*30, 3, float> pad_conv(pad_dim);
-  deconv_layer(delta_pool, x, &w1, &b1, &pad_conv, &delta_cnv, eps);
+  simple.Relu1.backward(&delta_pool, conv1_ans);
+
+  Tensor2D<28, 28, T> delta_conv;
+  simple.Conv1.backward(delta_pool, x, &delta_conv, eps);
 }
 
-unsigned long CNN::predict(Tensor<784, 3, float>& x) {
-  int dim[] = {24, 24, 30};
-  Tensor<24*24*30, 3, float> cnv1(dim);
-  conv_layer(x, w1, b1, &cnv1);
-  activate_layer(&cnv1, RELU);
+template <typename T>
+unsigned long CNN<T>::simple_predict(Tensor2D<28, 28, T>& x) {
+  Tensor3D<24, 24, 30, T> conv1_ans;
+  simple.Conv1.forward(x, &conv1_ans);
 
-  dim[0] = 12; dim[1] = 12; dim[2] = 30;
-  int idx_dim[] = {12*12*30};
-  Tensor<12*12*30, 3, float> pool1(dim);
-  Tensor<12*12*30, 1, int> idx1(idx_dim);
-  pool_layer(cnv1, &pool1, &idx1);
+  simple.Relu1.forward(&conv1_ans);
 
-  Tensor<12*12*30, 2, float> dense1 = pool1.flatten();
-  dim[0] = 100; dim[1] = 1;
-  Tensor<100, 2, float> dense2(dim);
-  affine_layer(dense1, w2, b2, &dense2);
-  activate_layer(&dense2, RELU);
+  Tensor3D<12, 12, 30, T> pool1_ans;
+  Tensor1D<12*12*30, int> idx;
+  simple.Pool1.forward(conv1_ans, &pool1_ans, &idx);
 
-  dim[0] = 10; dim[1] = 1;
-  Tensor<10, 2, float> ans(dim);
-  affine_layer(dense2, w3, b3, &ans);
-  activate_layer(&ans, SOFTMAX);
+  Tensor1D<12*12*30, T> dense1 = pool1_ans.flatten();
+  Tensor1D<100, T> dense2;
+  simple.Affine1.forward(dense1, &dense2);
 
-  float max = 0;
+  simple.Relu2.forward(&dense2);
+
+  Tensor1D<10, T> ans;
+  simple.Affine2.forward(dense2, &ans);
+
+  simple.Last.forward(&ans);
+
+  T max = (T)0;
   unsigned long argmax = 0;
   for (int i = 0; i < 10; ++i) {
     if (ans[i] > max) {
@@ -311,66 +130,129 @@ unsigned long CNN::predict(Tensor<784, 3, float>& x) {
   return argmax;
 }
 
-void CNN::run(status st) {
-  // This method works on only CPU. It's not supported by Vivado HLS.
-  if (st == TEST) {
-    const data test_X = readMnistImages(TEST);
-    const data test_y = readMnistLabels(TEST);
+template <typename T>
+void CNN<T>::dc_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps) {
+  // forward
+  Tensor3D<24, 24, 20, T> conv1_ans;
+  dc.Conv1.forward(x, &conv1_ans);
 
-    int dim[] = {28, 28, 1};
-    Tensor<28*28, 3, float> x(dim);
-    CNN cnn;
-    cnn.makeWeight();
+  dc.Relu1.forward(&conv1_ans);
 
+  Tensor3D<12, 12, 20, T> pool1_ans;
+  Tensor1D<12*12*20, int> idx1;
+  dc.Pool1.forward(conv1_ans, &pool1_ans, &idx1);
+
+  Tensor3D<8, 8, 50, T> conv2_ans;
+  dc.Conv2.forward(pool1_ans, &conv2_ans);
+
+  dc.Relu2.forward(&conv2_ans);
+
+  Tensor3D<4, 4, 50, T> pool2_ans;
+  Tensor1D<4*4*50, int> idx2;
+  dc.Pool2.forward(conv2_ans, &pool2_ans, &idx2);
+
+  Tensor1D<4*4*50, T> dense1 = pool2_ans.flatten();
+  Tensor1D<10, T> ans;
+  dc.Affine1.forward(dense1, &ans);
+
+  dc.Last.forward(&ans);
+
+  // backward
+  Tensor1D<10, T> delta2 = ans - t;
+  Tensor1D<4*4*50, T> delta1;
+  dc.Affine1.backward(delta2, dense1, &delta1, eps);
+
+  Tensor3D<4, 4, 50, T> delta1_3D;
+  delta1_3D.set_v(delta1.get_v());
+  Tensor3D<8, 8, 50, T> delta_pool2;
+  dc.Pool2.backward(delta1_3D, idx2, &delta_pool2);
+
+  dc.Relu2.backward(&delta_pool2, conv2_ans);
+
+  Tensor3D<12, 12, 20, T> delta_conv2;
+  dc.Conv2.backward(delta_pool2, pool1_ans, &delta_conv2, eps);
+
+  Tensor3D<24, 24, 20, T> delta_pool1;
+  dc.Pool1.backward(delta_conv2, idx1, &delta_pool1);
+
+  dc.Relu1.backward(&delta_pool1, conv1_ans);
+
+  Tensor2D<28, 28, T> delta_conv1;
+  dc.Conv1.backward(delta_pool1, x, &delta_conv1, eps);
+}
+
+template <typename T>
+unsigned long CNN<T>::dc_predict(Tensor2D<28, 28, T>& x) {
+  Tensor3D<24, 24, 20, T> conv1_ans;
+  dc.Conv1.forward(x, &conv1_ans);
+
+  dc.Relu1.forward(&conv1_ans);
+
+  Tensor3D<12, 12, 20, T> pool1_ans;
+  Tensor1D<12*12*20, int> idx1;
+  dc.Pool1.forward(conv1_ans, &pool1_ans, &idx1);
+
+  Tensor3D<8, 8, 50, T> conv2_ans;
+  dc.Conv2.forward(pool1_ans, &conv2_ans);
+
+  dc.Relu2.forward(&conv2_ans);
+
+  Tensor3D<4, 4, 50, T> pool2_ans;
+  Tensor1D<4*4*50, int> idx2;
+  dc.Pool2.forward(conv2_ans, &pool2_ans, &idx2);
+
+  Tensor1D<4*4*50, T> dense1 = pool2_ans.flatten();
+  Tensor1D<10, T> ans;
+  dc.Affine1.forward(dense1, &ans);
+
+  dc.Last.forward(&ans);
+
+  T max = (T)0;
+  unsigned long argmax = 0;
+  for (int i = 0; i < 10; ++i) {
+    if (ans[i] > max) {
+      max = ans[i];
+      argmax = i;
+    }
+  }
+  return argmax;
+}
+
+template <typename T>
+void CNN<T>::run() {
+  const data train_X = readMnistImages(TRAIN);
+  const data train_y = readMnistLabels(TRAIN);
+
+  const data test_X = readMnistImages(TEST);
+  const data test_y = readMnistLabels(TEST);
+
+  Tensor2D<28, 28, T> x;
+  Tensor1D<10, T> t;
+  CNN<T> cnn;
+ 
+  T eps = (T)0.01;
+  int epoch = 1;
+  for (int k = 0; k < epoch; ++k) {
+    for (int i = 0; i < train_X.col; ++i) {
+      x.set_v((float*)train_X.ptr + i * x.size(1) * x.size(0));
+      t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
+      cnn.dc_train(x, t, eps);
+    }
     int cnt = 0;
     for (int i = 0; i < test_X.col; ++i) {
       x.set_v((float*)test_X.ptr + i * x.size(1) * x.size(0));
-      unsigned long y = cnn.predict(x);
-      printf("predict: %lu, labels: %lu\n", y, ((unsigned long*)test_y.ptr)[i]);
+      unsigned long y = cnn.dc_predict(x);
       if (y == ((unsigned long*)test_y.ptr)[i])
         ++cnt;
     }
+    std::cout << "Epoc: " << k << std::endl;
     std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
-    free(test_X.ptr);
-    free(test_y.ptr);
   }
-  else if(st == TRAIN) {
-    const data train_X = readMnistImages(st);
-    const data train_y = readMnistLabels(st);
 
-    const data test_X = readMnistImages(TEST);
-    const data test_y = readMnistLabels(TEST);
+  free(train_X.ptr);
+  free(train_y.ptr);
 
-    int x_dim[] = {28, 28, 1};
-    Tensor<784, 3, float> x(x_dim);
-    int t_dim[] = {10, 1};
-    Tensor<10, 2, float> t(t_dim);
-    CNN cnn;
-    cnn.randomWeight();
- 
-    float eps = 0.001;
-    int epoch = 25;
-    for (int k = 0; k < epoch; ++k) {
-      for (int i = 0; i < train_X.col; ++i) {
-        x.set_v((float*)train_X.ptr + i * x.size(1) * x.size(0));
-        t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
-        cnn.train(x, t, eps);
-      }
-      int cnt = 0;
-      for (int i = 0; i < test_X.col; ++i) {
-        x.set_v((float*)test_X.ptr + i * x.size(1) * x.size(0));
-        unsigned long y = cnn.predict(x);
-        if (y == ((unsigned long*)test_y.ptr)[i])
-          ++cnt;
-      }
-      std::cout << "Epoc: " << k << std::endl;
-      std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
-    }
-    free(train_X.ptr);
-    free(train_y.ptr);
-
-    free(test_X.ptr);
-    free(test_y.ptr);
-  }
+  free(test_X.ptr);
+  free(test_y.ptr);
 }
 

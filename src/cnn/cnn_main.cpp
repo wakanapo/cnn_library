@@ -2,18 +2,11 @@
 
 #include "util/read_data.hpp"
 #include "cnn/cnn.hpp"
+#include "half.hpp"
 
-int main(int argc, char* argv[]) {
-  if (argc != 2) {
-    printf("Usage error!\n");
-    printf("====Usage====\n Train: ./cnn train\n Test : ./cnn test\n");
-    return 1;
-  }
-  CNN cnn;
-  if (argv[1][1] == 'r')
-    cnn.run(TRAIN);
-  else
-    cnn.run(TEST);
+using half_float::half;
+int main() {
+  CNN<half>::run();
   return 0;
 }
   

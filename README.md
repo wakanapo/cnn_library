@@ -3,6 +3,7 @@
 ## 必要なパッケージ
 **C++**
 * google-test : <http://opencv.jp/googletestdocs/primer.html>
+* protobuf : <https://github.com/google/protobuf/tree/master/src>
 
 **Python** (重みやデータの生成用）
 * numpy

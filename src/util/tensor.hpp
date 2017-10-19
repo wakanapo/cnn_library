@@ -1,146 +1,185 @@
 #pragma once
 
 #include <iostream>
+#include <typeinfo>
 #include <random>
 
-template <int N, int M, typename T>
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
 class Tensor {
 private:
-  // This initialization is supported by only C++11.
-  int dim[M] = {};
-  T v[N] = {};
+  static constexpr int size_ = dim1*dim2*dim3*dim4*dim5;
+  static constexpr int shape_[] = {dim1, dim2, dim3, dim4, dim5};
+  T v_[size_] = {};
 public:
-  Tensor(int const* dim_in);
   int size(int axis) const;
+  const int size() const;
   int bytes() const;
-  int* shape();
-  void set_v(T* v_in);
+  const int* shape() const;
+  template <typename T_prime>
+  void set_v(T_prime* v_in);
   void init();
-  void randomInit(float low, float high);
+  void randomInit(T low, T high);
   T* get_v();
-  Tensor<N, 2, T> flatten();
+  Tensor<dim1*dim2*dim3*dim4*dim5, 1, 1, 1, 1, T> flatten();
   T &operator[](int i);
-  Tensor<N, M, T> operator+(Tensor<N, M, T>& other) const;
-  Tensor<N, M, T> operator-(Tensor<N, M, T>& other) const;
-  Tensor<N, M, T> operator*(Tensor<N, M, T>& other) const;
-  Tensor<N, M, T> times(const float& other) const;
-  Tensor<N, M, T> transpose() const;
+  Tensor<dim1, dim2, dim3, dim4, dim5, T>
+  operator+(Tensor<dim1, dim2, dim3, dim4, dim5, T>& other) const;
+  Tensor<dim1, dim2, dim3, dim4, dim5, T>
+  operator-(Tensor<dim1, dim2, dim3, dim4, dim5, T>& other) const;
+  Tensor<dim1, dim2, dim3, dim4, dim5, T>
+  operator*(Tensor<dim1, dim2, dim3, dim4, dim5, T>& other) const;
+  Tensor<dim1, dim2, dim3, dim4, dim5, T>
+  times(const float& other) const;
+  Tensor<dim2, dim1, dim3, dim4, dim5, T>
+  transpose() const;
 };
 
-template <int N, int M, typename T>
-Tensor<N, M, T>::Tensor(int const* dim_in) {
-  for (int i = 0; i < M; ++i) {
-    dim[i] = dim_in[i];
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+int Tensor<dim1, dim2, dim3, dim4, dim5, T>::size(int axis) const {
+  return shape_[axis];
+}
+
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+const int Tensor<dim1, dim2, dim3, dim4, dim5, T>::size() const {
+  return size_;
+}
+
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+int Tensor<dim1, dim2, dim3, dim4, dim5, T>::bytes() const {
+  return size_ * sizeof(T);
+}
+
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+const int* Tensor<dim1, dim2, dim3, dim4, dim5, T>::shape() const {
+  return shape_;
+}
+
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+template <typename T_prime>
+void Tensor<dim1, dim2, dim3, dim4, dim5, T>::set_v(T_prime* v_in) {
+  for (int i = 0; i < size_; ++i) {
+    if (typeid(T) == typeid(T_prime)) {
+      v_[i] = v_in[i];
+    }
+    else {
+      v_[i] = (T)v_in[i];
+    }
   }
 }
 
-template <int N, int M, typename T>
-int Tensor<N, M, T>::size(int axis) const {
-  return dim[axis];
-}
-
-template< int N, int M, typename T>
-int Tensor<N, M, T>::bytes() const {
-  return N * sizeof(T);
-}
-
-template <int N, int M, typename T>
-int* Tensor<N, M, T>::shape() {
-  return dim;
-}
-
-template <int N, int M, typename T>
-void Tensor<N, M, T>::set_v(T* v_in) {
-  for (int i = 0; i < N; ++i)
-    v[i] = v_in[i];
-}
-
-template <int N, int M, typename T>
-void Tensor<N, M, T>::randomInit(float low, float high) {
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+void Tensor<dim1, dim2, dim3, dim4, dim5, T>::randomInit(T low, T high) {
   // std::random is supported by C++11.
   // I'm not sure whether it's supported Vivado HLS or not.
   std::random_device seed_gen;
   std::mt19937 engine(seed_gen());
-  std::uniform_real_distribution<> dist(low, high);
-  for (int i = 0; i < N; ++i) {
-    v[i] = dist(engine);
+  if (typeid(T) == typeid(int)) {
+    std::uniform_int_distribution<> dist(low, high);
+    for (int i = 0; i < size_; ++i) {
+      v_[i] = dist(engine);
+    }
+  }
+  else {
+    std::uniform_real_distribution<> dist(low, high);
+    for (int i = 0; i < size_; ++i) {
+      v_[i] = (T)dist(engine);
+    }
   }
 }
 
-template <int N, int M, typename T>
-void Tensor<N, M, T>::init() {
-  for (int i = 0; i < N; ++i)
-    v[i] = 0;
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+void Tensor<dim1, dim2, dim3, dim4, dim5, T>::init() {
+  for (int i = 0; i < size_; ++i)
+    v_[i] = 0;
 }
 
-template <int N, int M, typename T>
-T* Tensor<N, M, T>::get_v() {
-  return v;
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+T* Tensor<dim1, dim2, dim3, dim4, dim5, T>::get_v() {
+  return v_;
 }
 
-template <int N, int M, typename T>
-T &Tensor<N, M, T>::operator[](int i) {
-  if (i < 0 || i >= N) {
-    std::cerr << i << " is out of range(" << N << ")." << std::endl;
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+T &Tensor<dim1, dim2, dim3, dim4, dim5, T>::operator[](int i) {
+  if (i < 0 || i >= size_) {
+    std::cerr << i << " is out of range(" << size_ << ")." << std::endl;
     std::cerr << "Error!: Invalid index." << std::endl;
     abort(); // abort() is not supported by Vivado HLS.
   }
-  return v[i];
+  return v_[i];
 }
 
-template <int N, int M, typename T>
-Tensor<N, M, T> Tensor<N, M, T>::operator+(Tensor<N, M, T> &y) const {
-  Tensor<N, M, T> ans(dim);
-  for (int i = 0; i < N; ++i) {
-    ans[i] = v[i] + y[i];
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+Tensor<dim1, dim2, dim3, dim4, dim5, T> Tensor<dim1, dim2, dim3, dim4, dim5, T>
+::operator+(Tensor<dim1, dim2, dim3, dim4, dim5, T> &y) const {
+  Tensor<dim1, dim2, dim3, dim4, dim5, T> ans;
+  for (int i = 0; i < size_; ++i) {
+    ans[i] = v_[i] + y[i];
   }
   return ans;
 }
 
-template <int N, int M, typename T>
-Tensor<N, M, T> Tensor<N, M, T>::operator-(Tensor<N, M, T> &y) const {
-  Tensor<N, M, T> ans(dim);
-  for (int i = 0; i < N; ++i) {
-    ans[i] = v[i] - y[i];
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+Tensor<dim1, dim2, dim3, dim4, dim5, T> Tensor<dim1, dim2, dim3, dim4, dim5, T>
+::operator-(Tensor<dim1, dim2, dim3, dim4, dim5, T> &y) const {
+  Tensor<dim1, dim2, dim3, dim4, dim5, T> ans;
+  for (int i = 0; i < size_; ++i) {
+    ans[i] = v_[i] - y[i];
   }
   return ans;
 }
 
-template <int N, int M, typename T>
-Tensor<N, M, T> Tensor<N, M, T>::operator*(Tensor<N, M, T> &y) const {
-  Tensor<N, M, T> ans(dim);
-  for (int i = 0; i < N; ++i) {
-    ans[i] = v[i] * y[i];
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+Tensor<dim1, dim2, dim3, dim4, dim5, T> Tensor<dim1, dim2, dim3, dim4, dim5, T>
+::operator*(Tensor<dim1, dim2, dim3, dim4, dim5, T> &y) const {
+  Tensor<dim1, dim2, dim3, dim4, dim5, T> ans;
+  for (int i = 0; i < size_; ++i) {
+    ans[i] = v_[i] * y[i];
   }
   return ans;
 }
 
-template <int N, int M, typename T>
-Tensor<N, M, T> Tensor<N, M, T>::times(const float& y) const {
-  Tensor<N, M, T> ans(dim);
-  for (int i = 0; i < N; ++i) {
-    ans[i] = v[i] * y;
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+Tensor<dim1, dim2, dim3, dim4, dim5, T> Tensor<dim1, dim2, dim3, dim4, dim5, T>
+::times(const float& y) const {
+  Tensor<dim1, dim2, dim3, dim4, dim5, T> ans;
+  for (int i = 0; i < size_; ++i) {
+    ans[i] = v_[i] * y;
   }
   return ans;
 }
 
-template <int N, int M, typename T>
-Tensor<N, 2, T> Tensor<N, M, T>::flatten() {
-  int ans_dim[] = {N, 1};
-  Tensor<N, 2, T> ans(ans_dim);
-  ans.set_v(v);
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+Tensor<dim1*dim2*dim3*dim4*dim5, 1, 1, 1, 1, T>
+Tensor<dim1, dim2, dim3, dim4, dim5, T>::flatten() {
+  Tensor<size_, 1, 1, 1, 1, T> ans;
+  ans.set_v(v_);
   return ans;
 }
 
-template <int N, int M, typename T>
-Tensor<N, M, T> Tensor<N, M, T>::transpose() const {
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+Tensor<dim2, dim1, dim3, dim4, dim5, T> Tensor<dim1, dim2, dim3, dim4, dim5, T>::transpose() const {
   // TODO(wakanapo): Be able to deal with the multi-dimensional array.
-  Tensor<N, M, T> m(dim);
-  std::swap(m.shape()[0], m.shape()[1]);
-  for (int i = 0; i < dim[0]; ++i) {
-    for (int j = 0 ; j < dim[1]; ++j) {
-      m[i * dim[1] + j] = v[j * dim[0] + i];
+  Tensor<dim2, dim1, dim3, dim4, dim5, T> m;
+  for (int i = 0; i < dim1; ++i) {
+    for (int j = 0 ; j < dim2; ++j) {
+      m[i * dim2 + j] = v_[j * dim1 + i];
     }
   }
   return m;
 }
+
+template<int dim1, typename T>
+using Tensor1D = Tensor<dim1, 1, 1, 1, 1, T>;
+
+template<int dim1, int dim2, typename T>
+using Tensor2D = Tensor<dim1, dim2, 1, 1, 1, T>;
+
+template<int dim1, int dim2, int dim3, typename T>
+using Tensor3D = Tensor<dim1, dim2 ,dim3, 1, 1, T>;
+
+template<int dim1, int dim2, int dim3, int dim4, typename T>
+using Tensor4D = Tensor<dim1, dim2, dim3, dim4, 1, T>;
+
+template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
+using Tensor5D = Tensor<dim1, dim2, dim3, dim4, dim5, T>;
+
