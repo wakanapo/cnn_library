@@ -46,8 +46,10 @@ class CNN {
 public:
   void simple_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps);
   unsigned long simple_predict(Tensor2D<28, 28, T>& x);
+  void simple_save(std::string fname);
   void dc_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps);
   unsigned long dc_predict(Tensor2D<28, 28, T>& x);
+  void dc_save(std::string fname);
   static void run();
 private:
   SimpleConvNet<T> simple;
@@ -128,6 +130,18 @@ unsigned long CNN<T>::simple_predict(Tensor2D<28, 28, T>& x) {
     }
   }
   return argmax;
+}
+
+template <typename T>
+void CNN<T>::simple_save(std::string fname) {
+  CnnProto::Params p;
+  simple.Conv1.saveParams(&p);
+  simple.Affine1.saveParams(&p);
+  simple.Affine2.saveParams(&p);
+  std::fstream output(fname, std::ios::out | std::ios::trunc | std::ios::binary);
+  if (!p.SerializeToOstream(&output)) {
+    std::cerr << "Failed to write params." << std::endl;
+  }
 }
 
 template <typename T>
@@ -219,6 +233,18 @@ unsigned long CNN<T>::dc_predict(Tensor2D<28, 28, T>& x) {
 }
 
 template <typename T>
+void CNN<T>::dc_save(std::string fname) {
+  CnnProto::Params p;
+  dc.Conv1.saveParams(&p);
+  dc.Conv2.saveParams(&p);
+  dc.Affine1.saveParams(&p);
+  std::fstream output(fname, std::ios::out | std::ios::trunc | std::ios::binary);
+  if (!p.SerializeToOstream(&output)) {
+    std::cerr << "Failed to write params." << std::endl;
+  }
+}
+
+template <typename T>
 void CNN<T>::run() {
   const data train_X = readMnistImages(TRAIN);
   const data train_y = readMnistLabels(TRAIN);
@@ -231,17 +257,17 @@ void CNN<T>::run() {
   CNN<T> cnn;
  
   T eps = (T)0.01;
-  int epoch = 1;
+  int epoch = 15;
   for (int k = 0; k < epoch; ++k) {
     for (int i = 0; i < train_X.col; ++i) {
       x.set_v((float*)train_X.ptr + i * x.size(1) * x.size(0));
       t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
-      cnn.dc_train(x, t, eps);
+      cnn.simple_train(x, t, eps);
     }
     int cnt = 0;
     for (int i = 0; i < test_X.col; ++i) {
       x.set_v((float*)test_X.ptr + i * x.size(1) * x.size(0));
-      unsigned long y = cnn.dc_predict(x);
+      unsigned long y = cnn.simple_predict(x);
       if (y == ((unsigned long*)test_y.ptr)[i])
         ++cnt;
     }
@@ -249,6 +275,7 @@ void CNN<T>::run() {
     std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
   }
 
+  cnn.simple_save("simple.pb");
   free(train_X.ptr);
   free(train_y.ptr);
 

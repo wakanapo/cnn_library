@@ -1,179 +1,130 @@
 #pragma once
 
+#include <fstream>
+#include <iostream>
+#include <string>
+
 #include "util/tensor.hpp"
 #include "util/function.hpp"
-#include "mlp/mlp_weight.hpp"
+#include "cnn/layers.hpp"
 #include "util/read_data.hpp"
+#include "protos/cnn_params.pb.h"
 
-class MLP {
-private:
-  Tensor<len_w1, 2, float> w1;
-  Tensor<len_b1, 2, float> b1;
-  Tensor<len_w2, 2, float> w2;
-  Tensor<len_b2, 2, float> b2;
+template <typename T>
+class ThreeLayers {
 public:
-  MLP() : w1((int*)dim_w1), b1((int*)dim_b1), w2((int*)dim_w2), b2((int*)dim_b2) {};
-  void makeWeight();
-  void randomWeight();
-  void train();
-  unsigned long predict(Tensor<784, 2, float>& x);
-  void train(Tensor<784, 2, float>& x, Tensor<10, 2, float>& t, const float& eps);
-  static void run(status st);
+  ThreeLayers() : Affine1(Affine<28*28, 100, T>((T)-0.008, (T)0.008)),
+                  Affine2(Affine<100, 10, T>((T)-0.008, (T)0.008)) {};
+  Affine<28*28, 100, T> Affine1;
+  Sigmoid<T> Sigmoid1;
+  Affine<100, 10, T> Affine2;
+  Softmax<T> Last;
 };
 
-void MLP::makeWeight() {
-  w1.set_v(w1_);
-  b1.set_v(b1_);
-  w2.set_v(w2_);
-  b2.set_v(b2_);
+template <typename T>
+class MLP {
+public:
+  void three_train(Tensor1D<28*28, T>&x, Tensor1D<10, T>& t, const T& eps);
+  unsigned long three_predict(Tensor1D<28*28, T>& x);
+  void three_save(std::string fname);
+  static void run();
+private:
+  ThreeLayers<T> three;
+};
+
+template <typename T>
+void MLP<T>::three_train(Tensor1D<28*28, T>& x, Tensor1D<10, T>& t, const T& eps) {
+  // forward
+  Tensor1D<100, T> dense2;
+  three.Affine1.forward(x, &dense2);
+
+  three.Sigmoid1.forward(&dense2);
+
+  Tensor1D<10, T> ans;
+  three.Affine2.forward(dense2, &ans);
+
+  three.Last.forward(&ans);
+
+  // Backward
+  Tensor1D<10, T> delta3 = ans - t;
+  Tensor1D<100, T> delta2;
+  three.Affine2.backward(delta3, dense2, &delta2, eps);
+  three.Sigmoid1.backward(&delta2, dense2);
+
+  Tensor1D<28*28, T> delta1;
+  three.Affine1.backward(delta2, x, &delta1, eps);
 }
 
-void MLP::randomWeight() {
-  w1.randomInit(-0.08, 0.08);
-  b1.randomInit(-0.08, 0.08);
-  w2.randomInit(-0.08, 0.08);
-  b2.randomInit(-0.08, 0.08);
-}
+template <typename T>
+unsigned long MLP<T>::three_predict(Tensor1D<28*28, T>& x) {
+  Tensor1D<100, T> dense2;
+  three.Affine1.forward(x, &dense2);
 
-unsigned long MLP::predict(Tensor<784, 2, float>& x) {
-  int dim_u1[] = {100, 1};
-  Tensor<100, 2, float> u1(dim_u1);
-  Function::matmul(x, w1, &u1);
-  u1 = u1 + b1;
-  Tensor<100, 2, float> z1 = u1;
-  Function::sigmoid(&z1);
+  three.Sigmoid1.forward(&dense2);
 
-  int dim_u2[] = {10, 1};
-  Tensor<10, 2, float>  u2(dim_u2);
-  Function::matmul(z1, w2, &u2);
-  u2 = u2 + b2;
-  Tensor<10, 2, float> z2 = u2;
-  Function::softmax(&z2);
+  Tensor1D<10, T> ans;
+  three.Affine2.forward(dense2, &ans);
 
-  float max = 0;
+  three.Last.forward(&ans);
+  
+  T max = (T)0;
   unsigned long argmax = 0;
   for (int i = 0; i < 10; ++i) {
-    if (z2[i] > max) {
-      max = z2[i];
+    if (ans[i] > max) {
+      max = ans[i];
       argmax = i;
     }
   }
-
   return argmax;
 }
 
-void MLP::train(Tensor<784, 2, float>& x, Tensor<10, 2, float>& t, const float& eps) {
-  // Forward
-  int dim_u1[] = {100, 1};
-  Tensor<100, 2, float> u1(dim_u1);
-  Function::matmul(x, w1, &u1);
-  u1 = u1 + b1;
-  Tensor<100, 2, float> z1 = u1;
-  Function::sigmoid(&z1);
-
-  int dim_u2[] = {10, 1};
-  Tensor<10, 2, float>  u2(dim_u2);
-  Function::matmul(z1, w2, &u2);
-  u2 = u2 + b2;
-  Tensor<10, 2, float> z2 = u2;
-  Function::softmax(&z2);
-
-  // Backward
-  Tensor<10, 2, float> delta2 = z2 - t;
-  
-  Tensor<100, 2, float> delta1 = u1;
-  Tensor<100, 2, float> temp(dim_u1);
-  Tensor<len_w2, 2, float> w2_t = w2.transpose();
-  Function::deriv_sigmoid(&delta1);
-  Function::matmul(delta2, w2_t, &temp);
-  delta1 = delta1 * temp;
-
-  Tensor<len_w1, 2, float> dw1(dim_w1);
-  Tensor<784, 2, float> x_t = x.transpose();
-  Function::matmul(x_t, delta1, &dw1);
-  int dim_x_ones[] = {1, 1};
-  Tensor<1, 2, float> x_ones(dim_x_ones);
-  for (int i = 0; i < 1; ++i)
-    x_ones[i] = 1;
-  Tensor<len_b1, 2, float> db1(dim_b1);
-  Function::matmul(x_ones, delta1, &db1);
-  Tensor<len_w1, 2, float> dw1_n = dw1.times(eps);
-  w1 = w1 - dw1_n;
-  Tensor<len_b1, 2, float> db1_n = db1.times(eps);
-  b1 = b1 - db1_n;
-
-  Tensor<len_w2, 2, float> dw2(dim_w2);
-  Tensor<100, 2, float> z1_t = z1.transpose();
-  Function::matmul(z1_t, delta2, &dw2);
-  Tensor<1, 2, float> z1_ones(dim_x_ones);
-  for (int i = 0; i < 1; ++i)
-    z1_ones[i] = 1;
-  Tensor<len_b2, 2, float> db2(dim_b2);
-  Function::matmul(z1_ones, delta2, &db2);
-  Tensor<len_w2, 2, float> dw2_n = dw2.times(eps);
-  w2 = w2 - dw2_n;
-  Tensor<len_b2, 2, float> db2_n = db2.times(eps);
-  b2 = b2 - db2_n;
+template <typename T>
+void MLP<T>::three_save(std::string fname) {
+  CnnProto::Params p;
+  three.Affine1.saveParams(&p);
+  three.Affine2.saveParams(&p);
+  std::fstream output(fname, std::ios::out | std::ios::trunc | std::ios::binary);
+  if (!p.SerializeToOstream(&output)) {
+    std::cerr << "Failed to write params." << std::endl;
+  }
 }
 
-void MLP::run(status st) {
-  if (st == TEST) {
-    const data test_X = readMnistImages(st);
-    const data test_y = readMnistLabels(st);
+template <typename T>
+void MLP<T>::run() {
+  const data train_X = readMnistImages(TRAIN);
+  const data train_y = readMnistLabels(TRAIN);
 
-    int dim[] = {784, 1};
-    Tensor<784, 2, float> x(dim);
-    MLP mlp;
-    mlp.makeWeight();
+  const data test_X = readMnistImages(TEST);
+  const data test_y = readMnistLabels(TEST);
 
+  Tensor1D<28*28, T> x;
+  Tensor1D<10, T> t;
+  MLP<T> mlp;
+ 
+  T eps = (T)0.01;
+  int epoch = 15;
+  for (int k = 0; k < epoch; ++k) {
+    for (int i = 0; i < train_X.col; ++i) {
+      x.set_v((float*)train_X.ptr + i * x.size());
+      t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
+      mlp.three_train(x, t, eps);
+    }
     int cnt = 0;
     for (int i = 0; i < test_X.col; ++i) {
-      x.set_v((float*)test_X.ptr + i * x.size(0));
-      unsigned long y = mlp.predict(x);
-      printf("predict: %lu, labels: %lu\n", y, ((unsigned long*)test_y.ptr)[i]);
+      x.set_v((float*)test_X.ptr + i * x.size());
+      unsigned long y = mlp.three_predict(x);
       if (y == ((unsigned long*)test_y.ptr)[i])
         ++cnt;
     }
+    std::cout << "Epoc: " << k << std::endl;
     std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
-    free(test_X.ptr);
-    free(test_y.ptr);
   }
-  else if (st == TRAIN) {
-    const data train_X = readMnistImages(st);
-    const data train_y = readMnistLabels(st);
 
-    const data test_X = readMnistImages(TEST);
-    const data test_y = readMnistLabels(TEST);
+  mlp.three_save("three.pb");
+  free(train_X.ptr);
+  free(train_y.ptr);
 
-    int x_dim[] = {784, 1};
-    Tensor<784, 2, float> x(x_dim);
-    int t_dim[] = {10, 1};
-    Tensor<10, 2, float> t(t_dim);
-    MLP mlp;
-    mlp.randomWeight();
-
-    float eps = 0.02;
-    int epoch = 25;
-    for (int k = 0; k < epoch; ++k) {
-      for (int i = 0; i < train_X.col; ++i) {
-        x.set_v((float*)train_X.ptr + i * x.size(0));
-        t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
-        mlp.train(x, t, eps);
-      }
-      int cnt = 0;
-      for (int i = 0; i < test_X.col; ++i) {
-        x.set_v((float*)test_X.ptr + i * x.size(0));
-        unsigned long y = mlp.predict(x);
-        if (y == ((unsigned long*)test_y.ptr)[i])
-          ++cnt;
-      }
-      std::cout << "Epoc: " << k << std::endl;
-      std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
-    }
-    free(train_X.ptr);
-    free(train_y.ptr);
-
-    free(test_X.ptr);
-    free(test_y.ptr);
-  }
+  free(test_X.ptr);
+  free(test_y.ptr);
 }
+

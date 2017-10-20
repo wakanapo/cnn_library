@@ -18,7 +18,7 @@ TESTDIR = $(shell pwd)/test
 all: $(BINDIR)/mlp $(BINDIR)/cnn $(BINDIR)/utest
 
 $(BINDIR)/mlp: src/mlp/mlp_main.cpp src/util/read_data.cpp $(BINDIR)
-	$(COMPILER) $(CXXFLAGS) -o $@ src/mlp/mlp_main.cpp src/util/read_data.cpp -I$(SRCDIR) $(CFLAGS)
+	$(COMPILER) $(CXXFLAGS) -o $@ src/mlp/mlp_main.cpp src/util/read_data.cpp src/protos/cnn_params.pb.cc -I$(SRCDIR) $(CFLAGS) `pkg-config --cflags --libs protobuf`
 
 $(BINDIR)/cnn/float: src/cnn/float/cnn_main.cpp src/util/read_data.cpp $(BINDIR)
 	$(COMPILER) $(CXXFLAGS) -o $@ src/cnn/float/cnn_main.cpp src/util/read_data.cpp -I$(SRCDIR) $(CFLAGS)

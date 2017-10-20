@@ -6,7 +6,7 @@
 
 using half_float::half;
 int main() {
-  CNN<half>::run();
+  CNN<float>::run();
   return 0;
 }
   
