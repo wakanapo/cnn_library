@@ -102,6 +102,7 @@ void MLP<T>::run() {
   MLP<T> mlp;
  
   T eps = (T)0.01;
+
   int epoch = 15;
   for (int k = 0; k < epoch; ++k) {
     for (int i = 0; i < train_X.col; ++i) {

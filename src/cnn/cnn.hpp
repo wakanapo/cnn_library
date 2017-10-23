@@ -256,7 +256,7 @@ void CNN<T>::run() {
   Tensor1D<10, T> t;
   CNN<T> cnn;
  
-  T eps = (T)0.01;
+  T eps = (float)0.01;
   int epoch = 15;
   for (int k = 0; k < epoch; ++k) {
     for (int i = 0; i < train_X.col; ++i) {
