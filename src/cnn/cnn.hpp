@@ -14,9 +14,9 @@
 template <typename T>
 class SimpleConvNet {
 public:
-  SimpleConvNet() : Conv1(Convolution<5, 5, 1, 30, 0, 1, T>(0, 0.001)),
-                    Affine1(Affine<12*12*30, 100, T>(0, 0.001)),
-                    Affine2(Affine<100, 10, T>(0, 0.001)) {};
+  SimpleConvNet() : Conv1(Convolution<5, 5, 1, 30, 0, 1, T>(-0.1, 0.1)),
+                    Affine1(Affine<12*12*30, 100, T>(-0.1, 0.1)),
+                    Affine2(Affine<100, 10, T>(-0.1, 0.1)) {};
   Convolution<5, 5, 1, 30, 0, 1, T> Conv1;
   Relu<T> Relu1;
   Pooling<2, 2, 0, 2, T> Pool1;
@@ -140,7 +140,7 @@ void CNN<T>::simple_save(std::string fname) {
   simple.Conv1.saveParams(&p);
   simple.Affine1.saveParams(&p);
   simple.Affine2.saveParams(&p);
-  std::fstream output(home+"/utokyo-kudohlab/cnn_cpp/data"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
+  std::fstream output(home+"/utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
   if (!p.SerializeToOstream(&output)) {
     std::cerr << "Failed to write params." << std::endl;
   }
@@ -260,7 +260,8 @@ void CNN<T>::run() {
   CNN<T> cnn;
  
   T eps = (T)0.01;
-  int epoch = 15;
+  int epoch = 5;
+
   for (int k = 0; k < epoch; ++k) {
     for (int i = 0; i < train_X.col; ++i) {
       x.set_v((float*)train_X.ptr + i * x.size(1) * x.size(0));
@@ -278,7 +279,7 @@ void CNN<T>::run() {
     std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
   }
 
-  cnn.simple_save("simple.pb");
+  cnn.simple_save("simple_half_normal.pb");
   free(train_X.ptr);
   free(train_y.ptr);
 

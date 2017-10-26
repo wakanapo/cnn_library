@@ -69,8 +69,8 @@ void Tensor<dim1, dim2, dim3, dim4, dim5, T>::randomInit(float low, float high) 
   // I'm not sure whether it's supported Vivado HLS or not.
   std::random_device seed_gen;
   std::mt19937 engine(seed_gen());
-  std::uniform_real_distribution<> dist(low, high);
-  // std::normal_distribution<> dist(low, high);
+  // std::uniform_real_distribution<> dist(low, high);
+  std::normal_distribution<> dist(low, high);
   for (int i = 0; i < size_; ++i) {
     v_[i] = dist(engine);
   }
