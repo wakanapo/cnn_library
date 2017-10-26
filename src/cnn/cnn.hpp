@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -13,9 +14,9 @@
 template <typename T>
 class SimpleConvNet {
 public:
-  SimpleConvNet() : Conv1(Convolution<5, 5, 1, 30, 0, 1, T>((T)0, (T)0.001)),
-                    Affine1(Affine<12*12*30, 100, T>((T)0, (T)0.001)),
-                    Affine2(Affine<100, 10, T>((T)0, (T)0.001)) {};
+  SimpleConvNet() : Conv1(Convolution<5, 5, 1, 30, 0, 1, T>(0, 0.001)),
+                    Affine1(Affine<12*12*30, 100, T>(0, 0.001)),
+                    Affine2(Affine<100, 10, T>(0, 0.001)) {};
   Convolution<5, 5, 1, 30, 0, 1, T> Conv1;
   Relu<T> Relu1;
   Pooling<2, 2, 0, 2, T> Pool1;
@@ -28,9 +29,9 @@ public:
 template <typename T>
 class DoubleConvNet {
 public:
-  DoubleConvNet() : Conv1(Convolution<5, 5, 1, 20, 0, 1, T>((T)-0.008, (T)0.008)),
-                    Conv2(Convolution<5, 5, 20, 50, 0, 1, T>((T)-0.008, (T)0.008)),
-                    Affine1(Affine<4*4*50, 10, T>((T)-0.008, (T)0.008)) {};
+  DoubleConvNet() : Conv1(Convolution<5, 5, 1, 20, 0, 1, T>(-0.008, 0.008)),
+                    Conv2(Convolution<5, 5, 20, 50, 0, 1, T>(-0.008, 0.008)),
+                    Affine1(Affine<4*4*50, 10, T>(-0.008, 0.008)) {};
   Convolution<5, 5, 1, 20, 0, 1, T> Conv1;
   Relu<T> Relu1;
   Pooling<2, 2, 0, 2, T> Pool1;
@@ -134,11 +135,12 @@ unsigned long CNN<T>::simple_predict(Tensor2D<28, 28, T>& x) {
 
 template <typename T>
 void CNN<T>::simple_save(std::string fname) {
+  std::string home = getenv("HOME");
   CnnProto::Params p;
   simple.Conv1.saveParams(&p);
   simple.Affine1.saveParams(&p);
   simple.Affine2.saveParams(&p);
-  std::fstream output(fname, std::ios::out | std::ios::trunc | std::ios::binary);
+  std::fstream output(home+"/utokyo-kudohlab/cnn_cpp/data"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
   if (!p.SerializeToOstream(&output)) {
     std::cerr << "Failed to write params." << std::endl;
   }
@@ -234,11 +236,12 @@ unsigned long CNN<T>::dc_predict(Tensor2D<28, 28, T>& x) {
 
 template <typename T>
 void CNN<T>::dc_save(std::string fname) {
+  std::string home = getenv("HOME");
   CnnProto::Params p;
   dc.Conv1.saveParams(&p);
   dc.Conv2.saveParams(&p);
   dc.Affine1.saveParams(&p);
-  std::fstream output(fname, std::ios::out | std::ios::trunc | std::ios::binary);
+  std::fstream output(home+"utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
   if (!p.SerializeToOstream(&output)) {
     std::cerr << "Failed to write params." << std::endl;
   }
@@ -256,7 +259,7 @@ void CNN<T>::run() {
   Tensor1D<10, T> t;
   CNN<T> cnn;
  
-  T eps = (float)0.01;
+  T eps = (T)0.01;
   int epoch = 15;
   for (int k = 0; k < epoch; ++k) {
     for (int i = 0; i < train_X.col; ++i) {

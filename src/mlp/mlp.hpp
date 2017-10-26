@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -13,8 +14,8 @@
 template <typename T>
 class ThreeLayers {
 public:
-  ThreeLayers() : Affine1(Affine<28*28, 100, T>((T)-0.008, (T)0.008)),
-                  Affine2(Affine<100, 10, T>((T)-0.008, (T)0.008)) {};
+  ThreeLayers() : Affine1(Affine<28*28, 100, T>((T)-1.0, (T)1.0)),
+                  Affine2(Affine<100, 10, T>((T)-1.0, (T)1.0)) {};
   Affine<28*28, 100, T> Affine1;
   Sigmoid<T> Sigmoid1;
   Affine<100, 10, T> Affine2;
@@ -80,10 +81,11 @@ unsigned long MLP<T>::three_predict(Tensor1D<28*28, T>& x) {
 
 template <typename T>
 void MLP<T>::three_save(std::string fname) {
+  std::string home = getenv("HOME");
   CnnProto::Params p;
   three.Affine1.saveParams(&p);
   three.Affine2.saveParams(&p);
-  std::fstream output(fname, std::ios::out | std::ios::trunc | std::ios::binary);
+  std::fstream output(home+"/utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
   if (!p.SerializeToOstream(&output)) {
     std::cerr << "Failed to write params." << std::endl;
   }
@@ -103,7 +105,6 @@ void MLP<T>::run() {
  
   T eps = (T)0.01;
   int epoch = 15;
-  
   for (int k = 0; k < epoch; ++k) {
     for (int i = 0; i < train_X.col; ++i) {
       x.set_v((float*)train_X.ptr + i * x.size());
@@ -121,11 +122,10 @@ void MLP<T>::run() {
     std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
   }
 
-  mlp.three_save("three.pb");
+  mlp.three_save("three_uniform11.pb");
   free(train_X.ptr);
   free(train_y.ptr);
 
   free(test_X.ptr);
   free(test_y.ptr);
 }
-

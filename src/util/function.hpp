@@ -8,6 +8,7 @@
 #include <limits>
 
 #include "util/tensor.hpp"
+#include "util/converter.hpp"
 
 class Function {
 public:
@@ -25,69 +26,73 @@ public:
   static void deriv_softmax(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t);
   template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
             int dim1_p, int dim2_p>
-  static void matmul(Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
-                      Tensor<dim1_p, dim2_p, dim3, dim4, dim5, T>& m,
-                      Tensor<dim1_p, dim2, dim3, dim4, dim5, T>* ans);
+  static void matmul(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
+                     const Tensor<dim1_p, dim2_p, dim3, dim4, dim5, T>& m,
+                     Tensor<dim1_p, dim2, dim3, dim4, dim5, T>* ans);
   template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
             int w_row, int w_col, int out, int a_row, int a_col>
-  static void conv2d(Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
-                     Tensor<w_row, w_col, dim3, out, dim4, T>& w,
+  static void conv2d(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
+                     const Tensor<w_row, w_col, dim3, out, dim4, T>& w,
                      Tensor<a_row, a_col, out, dim4, dim5, T>* ans,
                      int p, int s);
   template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
             int w_row, int w_col, int out, int a_row, int a_col>
-  static void deconv2d(Tensor<a_row, a_col, out, dim4, dim5, T>& conv,
-                       Tensor<w_row, w_col, dim3, out, dim5, T>& w,
+  static void deconv2d(const Tensor<a_row, a_col, out, dim4, dim5, T>& conv,
+                       const Tensor<w_row, w_col, dim3, out, dim5, T>& w,
                        Tensor<dim1, dim2, dim3, dim4, dim5, T>* ans,
                        int p, int s);
   template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
             int a_row, int a_col>
-  static void max_pool(Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
+  static void max_pool(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
                        int k_row, int k_col,
                         Tensor<a_row, a_col, dim3, dim4, dim5, T>* ans,
                        Tensor<a_row*a_col*dim3*dim4*dim5, 1, 1, 1, 1, int>* idx,
                        int p, int s);
   template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
             int dim1_p, int dim2_p>
-  static void depool(Tensor<dim1, dim2, dim3, dim4, dim5, T>& pool,
-                      Tensor<dim1*dim2*dim3*dim4*dim5, 1, 1, 1, 1, int>& idx,
+  static void depool(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& pool,
+                     const Tensor<dim1*dim2*dim3*dim4*dim5, 1, 1, 1, 1, int>& idx,
                      Tensor<dim1_p, dim2_p, dim3, dim4, dim5, T>* ans);
   template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T, int dim1_p>
   static void add_bias(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t,
-                       Tensor<dim1_p, 1, 1, 1, 1, T>& b);
+                       const Tensor<dim1_p, 1, 1, 1, 1, T>& b);
   template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
             int dim1_p, int dim2_p>
-  static void padding(Tensor<dim1, dim2, dim3, dim4, dim5, T>& before,
+  static void padding(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& before,
                       Tensor<dim1_p, dim2_p, dim3, dim4, dim5, T>* ans, int p);
 };
 
 template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
 void Function::ReLU(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t) {
-  for (int i = 0; i < t->size(); ++i)
-    (*t)[i] = ((*t)[i] > 0) ? (*t)[i] : 0;
+  for (int i = 0; i < t->size(); ++i) {
+    if ((*t)[i] <= 0.0)
+      (*t)[i] = 0.0;
+  }
 }
 
 template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
 void Function::deriv_ReLU(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t) {
   for (int i = 0; i < t->size(); ++i)
-    (*t)[i] = ((*t)[i] > 0) ? 1 : 0;
+    if ((*t)[i] <= 0.0)
+      (*t)[i] = 0.0;
+    else
+      (*t)[i] = 1.0;
 }
 
 template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
 void Function::sigmoid(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t) {
   for (int i = 0; i < t->size(); ++i)
-    (*t)[i] = (T)(1 / (1 + (T)exp(-1 * (*t)[i])));
+    (*t)[i] = (1.0 / (1.0 + exp(-1.0 * Converter::ToFloat((*t)[i]))));
 }
 
-template <typename T>
-T uni_sigmoid(T v) {
-  return (T)(1 / (1 + (T)exp(-1 * v)));
+float uni_sigmoid(float v) {
+  return 1.0 / (1.0 + exp(-1.0 * v));
 }
 
 template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
 void Function::deriv_sigmoid(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t) {
   for (int i = 0; i < t->size(); ++i)
-    (*t)[i] = uni_sigmoid((*t)[i]) * (1 - uni_sigmoid((*t)[i]));
+    (*t)[i] = uni_sigmoid((*t)[i]) * (1.0 - uni_sigmoid((*t)[i]));
 }
 
 template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
@@ -122,7 +127,7 @@ void Function::deriv_softmax(Tensor<dim1, dim2, dim3, dim4, dim5, T> *t) {
       for (int j = 0; j < row; ++j) {
         int idx = l*(row*col) + k*row + j;
         v[idx] = exp(v[idx]) / sum;
-        v[idx] *= 1 - v[idx];
+        v[idx] = v[idx] * (1.0 - Converter::ToFloat(v[idx]));
       }
     }
   }
@@ -130,8 +135,8 @@ void Function::deriv_softmax(Tensor<dim1, dim2, dim3, dim4, dim5, T> *t) {
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
           int dim1_p, int dim2_p>
-void Function::matmul(Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
-                      Tensor<dim1_p, dim2_p, dim3, dim4, dim5, T>& m,
+void Function::matmul(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
+                      const Tensor<dim1_p, dim2_p, dim3, dim4, dim5, T>& m,
                       Tensor<dim1_p, dim2, dim3, dim4, dim5, T>* ans) {
   int t_col = t.size(1);
   int t_row = t.size(0);
@@ -153,8 +158,8 @@ void Function::matmul(Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
           int w_row, int w_col, int out, int a_row, int a_col>
-void Function::conv2d(Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
-                      Tensor<w_row, w_col, dim3, out, dim4, T>& w,
+void Function::conv2d(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
+                      const Tensor<w_row, w_col, dim3, out, dim4, T>& w,
                       Tensor<a_row, a_col, out, dim4, dim5, T> *ans,
                       int p, int s) {
   ans->init();
@@ -176,8 +181,8 @@ void Function::conv2d(Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
           int w_row, int w_col, int out, int a_row, int a_col>
-void Function::deconv2d(Tensor<a_row, a_col, out, dim4, dim5, T>& conv,
-                        Tensor<w_row, w_col, dim3, out, dim5, T>& w,
+void Function::deconv2d(const Tensor<a_row, a_col, out, dim4, dim5, T>& conv,
+                        const Tensor<w_row, w_col, dim3, out, dim5, T>& w,
                         Tensor<dim1, dim2, dim3, dim4, dim5, T>* ans,
                         int p, int s) {
   constexpr int pad_size = w_row - 1;
@@ -203,7 +208,7 @@ void Function::deconv2d(Tensor<a_row, a_col, out, dim4, dim5, T>& conv,
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
           int a_row, int a_col>
-void Function::max_pool(Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
+void Function::max_pool(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
                         int k_row, int k_col,
                         Tensor<a_row, a_col, dim3, dim4, dim5, T>* ans,
                         Tensor<a_row*a_col*dim3*dim4*dim5, 1, 1, 1, 1, int>* idx,
@@ -231,8 +236,8 @@ void Function::max_pool(Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
           int dim1_p, int dim2_p>
-void Function::depool(Tensor<dim1, dim2, dim3, dim4, dim5, T>& pool,
-                      Tensor<dim1*dim2*dim3*dim4*dim5, 1, 1, 1, 1, int>& idx,
+void Function::depool(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& pool,
+                      const Tensor<dim1*dim2*dim3*dim4*dim5, 1, 1, 1, 1, int>& idx,
                       Tensor<dim1_p, dim2_p, dim3, dim4, dim5, T>* ans) {
   ans->init();
   for (int i = 0; i < pool.size(); ++i) {
@@ -242,7 +247,7 @@ void Function::depool(Tensor<dim1, dim2, dim3, dim4, dim5, T>& pool,
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T, int dim1_p>
 void Function::add_bias(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t,
-                        Tensor<dim1_p, 1, 1, 1, 1, T>& b) {
+                        const Tensor<dim1_p, 1, 1, 1, 1, T>& b) {
   int len = t->size() / dim1_p;
   for (int j = 0; j < dim1_p; ++j)
     for (int i = 0; i < len; ++i)
@@ -251,7 +256,7 @@ void Function::add_bias(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t,
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
           int dim1_p, int dim2_p>
-void Function::padding(Tensor<dim1, dim2, dim3, dim4, dim5, T>& before,
+void Function::padding(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& before,
                        Tensor<dim1_p, dim2_p, dim3, dim4, dim5, T>* ans, int p) {
   ans->init();
   int col = before.size(1);
