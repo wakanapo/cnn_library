@@ -70,9 +70,12 @@ void Tensor<dim1, dim2, dim3, dim4, dim5, T>::randomInit(float low, float high) 
   std::random_device seed_gen;
   std::mt19937 engine(seed_gen());
   // std::uniform_real_distribution<> dist(low, high);
-  std::normal_distribution<> dist(low, high);
+  // for (int i = 0; i < size_; ++i) {
+  //   v_[i] = dist(engine);
+  // }
+  std::normal_distribution<> dist(0, 1);
   for (int i = 0; i < size_; ++i) {
-    v_[i] = dist(engine);
+    v_[i] = std::abs(high)*dist(engine);
   }
 }
 

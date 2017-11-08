@@ -7,7 +7,7 @@
 
 // using half_float::half;
 int main() {
-  CNN<CFix16>::run();
+  CNN<float>::run();
   return 0;
 }
   

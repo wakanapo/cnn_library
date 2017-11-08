@@ -2,7 +2,7 @@
 
 #include "util/tensor.hpp"
 #include "util/function.hpp"
-#include "cnn/float/cnn_weight.hpp"
+#include "cnn/for_test/cnn_weight.hpp"
 #include "util/read_data.hpp"
 
 enum activation {

@@ -1,7 +1,7 @@
 #include <cstdio>
 
 #include "util/read_data.hpp"
-#include "cnn/float/cnn.hpp"
+#include "cnn/for_test/cnn.hpp"
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {

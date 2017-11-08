@@ -26,8 +26,8 @@ $(BINDIR)/cnn: src/cnn/cnn_main.cpp src/util/read_data.cpp src/protos/cnn_params
 $(BINDIR)/protoc: src/protos/cnn_params.proto
 	protoc -I=src/protos --cpp_out=src/protos src/protos/cnn_params.proto
 
-$(BINDIR)/utest: test/util_test.cpp src/util/read_data.cpp $(BINDIR)
-	$(COMPILER) $(CXXFLAGS) -o $@ test/util_test.cpp src/util/read_data.cpp -I$(GTEST_INCLUDEDIR) -I$(SRCDIR) -L$(GTEST_LIBDIR) $(CFLAGS) $(TESTFLAGS)
+$(BINDIR)/utest: test/util_test.cpp src/util/read_data.cpp src/util/converter.cpp $(BINDIR)
+	$(COMPILER) $(CXXFLAGS) -o $@ test/util_test.cpp src/util/read_data.cpp src/util/converter.cpp -I$(GTEST_INCLUDEDIR) -I$(SRCDIR) -I$(INCLUDEDIR) -L$(GTEST_LIBDIR) $(CFLAGS) $(TESTFLAGS)
 
 .PHONY: clean
 clean:

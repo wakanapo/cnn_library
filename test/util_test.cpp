@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <iostream>
 
-#include "cnn/float/cnn.hpp"
-#include "cnn/float/cnn_weight.hpp"
+#include "cnn/for_test/cnn.hpp"
+#include "cnn/for_test/cnn_weight.hpp"
 #include "util/function.hpp"
 #include "util/tensor.hpp"
 #include "util/read_data.hpp"

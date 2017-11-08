@@ -142,18 +142,18 @@ void Function::matmul(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
   int t_row = t.size(0);
   int m_col = m.size(1);
   int m_row = m.size(0);
+  if (m_col != t_row) {
+    std::cout << "Dimensional Error!" << std::endl;
+    abort();
+  }
+  ans->init();
   for (int l = 0; l < t.size() / (t_col * t_row); ++l)
     for (int i = 0; i < t_col; ++i)
       for (int k = 0; k < t_row; ++k)
         for (int j = 0; j < m_row; ++j)
-          if (k == 0)
-            (*ans)[l * (t_col * m_row) + i * m_row + j]
-              = t[l * (t_col * t_row) + i * t_row + k]
-              * m[l * (m_col * m_row) + k * m_row + j];
-          else
-            (*ans)[l * (t_col * m_row) + i * m_row + j]
-              += t[l * (t_col * t_row) + i * t_row + k]
-              * m[l * (m_col * m_row) + k * m_row + j];
+          (*ans)[l * (t_col * m_row) + i * m_row + j]
+            += t[l * (t_col * t_row) + i * t_row + k]
+            * m[l * (m_col * m_row) + k * m_row + j];
 }
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,

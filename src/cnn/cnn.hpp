@@ -14,9 +14,9 @@
 template <typename T>
 class SimpleConvNet {
 public:
-  SimpleConvNet() : Conv1(Convolution<5, 5, 1, 30, 0, 1, T>(-0.1, 0.1)),
-                    Affine1(Affine<12*12*30, 100, T>(-0.1, 0.1)),
-                    Affine2(Affine<100, 10, T>(-0.1, 0.1)) {};
+  SimpleConvNet() : Conv1(Convolution<5, 5, 1, 30, 0, 1, T>(-0.01, 0.01)),
+                    Affine1(Affine<12*12*30, 100, T>(-0.01, 0.01)),
+                    Affine2(Affine<100, 10, T>(-0.01, 0.01)) {};
   Convolution<5, 5, 1, 30, 0, 1, T> Conv1;
   Relu<T> Relu1;
   Pooling<2, 2, 0, 2, T> Pool1;
@@ -261,13 +261,17 @@ void CNN<T>::run() {
  
   T eps = (T)0.01;
   int epoch = 5;
+  int image_num = train_X.col / epoch;
 
   for (int k = 0; k < epoch; ++k) {
-    for (int i = 0; i < train_X.col; ++i) {
+    for (int i = image_num * k; i < image_num * (k+1); ++i) {
       x.set_v((float*)train_X.ptr + i * x.size(1) * x.size(0));
-      t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
+      float* y_onehot = mnistOneHot(((unsigned long*) train_y.ptr)[i]);
+      t.set_v(y_onehot);
       cnn.simple_train(x, t, eps);
+      free(y_onehot);
     }
+
     int cnt = 0;
     for (int i = 0; i < test_X.col; ++i) {
       x.set_v((float*)test_X.ptr + i * x.size(1) * x.size(0));
@@ -279,7 +283,7 @@ void CNN<T>::run() {
     std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
   }
 
-  cnn.simple_save("simple_half_normal.pb");
+  // cnn.simple_save("simple_half_normal.pb");
   free(train_X.ptr);
   free(train_y.ptr);
 
