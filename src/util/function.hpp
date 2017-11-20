@@ -9,6 +9,7 @@
 
 #include "util/tensor.hpp"
 #include "util/converter.hpp"
+#include "util/float_macro.hpp"
 
 class Function {
 public:
@@ -82,17 +83,17 @@ void Function::deriv_ReLU(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t) {
 template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
 void Function::sigmoid(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t) {
   for (int i = 0; i < t->size(); ++i)
-    (*t)[i] = (1.0 / (1.0 + exp(-1.0 * Converter::ToFloat((*t)[i]))));
+    (*t)[i] = DIV(1.0, ADD(1.0, exp(-1.0 * Converter::ToFloat((*t)[i]))));
 }
 
 float uni_sigmoid(float v) {
-  return 1.0 / (1.0 + exp(-1.0 * v));
+  return DIV(1.0, ADD(1.0, exp(-1.0 * v)));
 }
 
 template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
 void Function::deriv_sigmoid(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t) {
   for (int i = 0; i < t->size(); ++i)
-    (*t)[i] = uni_sigmoid((*t)[i]) * (1.0 - uni_sigmoid((*t)[i]));
+    (*t)[i] = MUL(uni_sigmoid((*t)[i]), SUB(1.0, uni_sigmoid((*t)[i])));
 }
 
 template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
@@ -104,10 +105,10 @@ void Function::softmax(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t) {
     for (int k = 0; k < col; ++k) {
       float sum = 0;
       for (int i = 0; i < row; ++i) {
-        sum += exp(v[l * (row * col) + k * row + i]);
+        sum = ADD(sum, exp(v[l * (row * col) + k * row + i]));
       }
       for (int j = 0; j < row; ++j) {
-        v[l * (row * col) + k * row + j] = exp(v[l * (row * col) + k * row + j]) / sum;
+        v[l * (row * col) + k * row + j] = DIV(exp(v[l * (row * col) + k * row + j]), sum);
       }
     }
   }
@@ -122,12 +123,12 @@ void Function::deriv_softmax(Tensor<dim1, dim2, dim3, dim4, dim5, T> *t) {
     for (int k = 0; k < col; ++k) {
       float sum = 0;
       for (int i = 0; i < row; ++i) {
-        sum += exp(v[l * (row * col) + k * row + i]);
+        sum = ADD(sum, exp(v[l * (row * col) + k * row + i]));
       }
       for (int j = 0; j < row; ++j) {
         int idx = l*(row*col) + k*row + j;
-        v[idx] = exp(v[idx]) / sum;
-        v[idx] = v[idx] * (1.0 - Converter::ToFloat(v[idx]));
+        v[idx] = DIV(exp(v[idx]), sum);
+        v[idx] = MUL(v[idx], SUB(1.0, Converter::ToFloat(v[idx])));
       }
     }
   }
@@ -151,9 +152,8 @@ void Function::matmul(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
     for (int i = 0; i < t_col; ++i)
       for (int k = 0; k < t_row; ++k)
         for (int j = 0; j < m_row; ++j)
-          (*ans)[l * (t_col * m_row) + i * m_row + j]
-            += t[l * (t_col * t_row) + i * t_row + k]
-            * m[l * (m_col * m_row) + k * m_row + j];
+            (*ans)[l * (t_col * m_row) + i * m_row + j]
+              = ADD((*ans)[l * (t_col * m_row) + i * m_row + j], MUL(t[l * (t_col * t_row) + i * t_row + k],  m[l * (m_col * m_row) + k * m_row + j]));
 }
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
@@ -173,10 +173,11 @@ void Function::conv2d(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& t,
         for (int ch = 0; ch < w_dim[2]; ++ch)
           for (int c = 0; c < w_dim[1]; ++c)
             for (int r = 0; r < w_dim[0]; ++r)
-              (*ans)[k*(ans_dim[0]*ans_dim[1]) + i*ans_dim[0] + j] +=
-                t[ch*(dim[1]*dim[0]) + (i*s+c)*dim[0] + (j*s+r)] *
-                w[k*(w_dim[2]*w_dim[1]*w_dim[0]) + ch*(w_dim[1]*w_dim[0])
-                  + c*w_dim[0] + r];
+              (*ans)[k*(ans_dim[0]*ans_dim[1]) + i*ans_dim[0] + j] =
+                ADD((*ans)[k*(ans_dim[0]*ans_dim[1]) + i*ans_dim[0] + j],
+                    MUL(t[ch*(dim[1]*dim[0]) + (i*s+c)*dim[0] + (j*s+r)],
+                        w[k*(w_dim[2]*w_dim[1]*w_dim[0]) + ch*(w_dim[1]*w_dim[0])
+                          + c*w_dim[0] + r]));
 }
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
@@ -200,10 +201,11 @@ void Function::deconv2d(const Tensor<a_row, a_col, out, dim4, dim5, T>& conv,
         for (int ch = 0; ch < w_dim[3]; ++ch)
           for (int c = 0; c < w_dim[1]; ++c)
             for (int r = 0; r < w_dim[0]; ++r)
-              (*ans)[k*(ans_dim[0]*ans_dim[1]) + i*ans_dim[0] + j] +=
-                pad_conv[ch*(dim[1]*dim[0]) + (i*s+c)*dim[0] + (j*s+r)] *
-                w[ch*(w_dim[2]*w_dim[1]*w_dim[0]) + k*(w_dim[1]*w_dim[0])
-                    + (w_dim[1]-1-c)*w_dim[0] + (w_dim[0]-1-r)];
+              (*ans)[k*(ans_dim[0]*ans_dim[1]) + i*ans_dim[0] + j] =
+                ADD((*ans)[k*(ans_dim[0]*ans_dim[1]) + i*ans_dim[0] + j],
+                    MUL(pad_conv[ch*(dim[1]*dim[0]) + (i*s+c)*dim[0] + (j*s+r)],
+                        w[ch*(w_dim[2]*w_dim[1]*w_dim[0]) + k*(w_dim[1]*w_dim[0])
+                          + (w_dim[1]-1-c)*w_dim[0] + (w_dim[0]-1-r)]));
 }
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,
@@ -251,7 +253,7 @@ void Function::add_bias(Tensor<dim1, dim2, dim3, dim4, dim5, T>* t,
   int len = t->size() / dim1_p;
   for (int j = 0; j < dim1_p; ++j)
     for (int i = 0; i < len; ++i)
-      (*t)[j * len + i] = (*t)[j * len + i] + b[j];
+      (*t)[j * len + i] = ADD((*t)[j * len + i], b[j]);
 }
 
 template <int dim1, int dim2, int dim3, int dim4, int dim5, typename T,

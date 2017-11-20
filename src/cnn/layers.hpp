@@ -86,8 +86,10 @@ void Convolution<w_row, w_col, input, output, P, S, T>
             for (int r = 0; r < d_dim[0]; ++r)
               delta_w[i*w_dim[0]*w_dim[1]*w_dim[2] +
                       j*w_dim[0]*w_dim[1] + k*w_dim[0] + l]
-                += delta[i*d_dim[0]*d_dim[1] + c*d_dim[0] + r] *
-                x[j*(x_dim[1]*x_dim[0]) + (k+c)*x_dim[0] + (l+r)];
+                = ADD(delta_w[i*w_dim[0]*w_dim[1]*w_dim[2] +
+                              j*w_dim[0]*w_dim[1] + k*w_dim[0] + l],
+                      MUL(delta[i*d_dim[0]*d_dim[1] + c*d_dim[0] + r],
+                          x[j*(x_dim[1]*x_dim[0]) + (k+c)*x_dim[0] + (l+r)]));
   
   delta_w = delta_w.times(eps);
   w_ = w_ - delta_w;
@@ -103,7 +105,7 @@ void Convolution<w_row, w_col, input, output, P, S, T>
   for (int i = 0; i < delta.size(2); ++i)
     for (int j = 0; j < delta.size(1); ++j)
       for (int h = 0; h < delta.size(0); ++h)
-        delta_b[i] = delta_b[i] + delta[i*delta.size(0)*delta.size(1) + j*delta.size(0) + h];
+        delta_b[i] = ADD(delta_b[i], delta[i*delta.size(0)*delta.size(1) + j*delta.size(0) + h]);
 
   delta_b = delta_b.times(eps);
   b_ = b_ - delta_b;
@@ -202,7 +204,6 @@ void Affine<input, output, T>
   x_ones[0] = 1;
   Tensor1D<output, T> db;
   Function::matmul(x_ones, delta, &db);
-  
   db = db.times(eps);
   b_ = b_ - db;
 }

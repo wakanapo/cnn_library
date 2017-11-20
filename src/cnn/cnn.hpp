@@ -2,21 +2,28 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <fcntl.h>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <google/protobuf/io/gzip_stream.h>
+#include <google/protobuf/io/zero_copy_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 
 #include "util/tensor.hpp"
 #include "util/function.hpp"
 #include "cnn/layers.hpp"
 #include "util/read_data.hpp"
 #include "protos/cnn_params.pb.h"
+#include "protos/arithmatic.pb.h"
 
 template <typename T>
 class SimpleConvNet {
 public:
-  SimpleConvNet() : Conv1(Convolution<5, 5, 1, 30, 0, 1, T>(-0.01, 0.01)),
-                    Affine1(Affine<12*12*30, 100, T>(-0.01, 0.01)),
-                    Affine2(Affine<100, 10, T>(-0.01, 0.01)) {};
+  SimpleConvNet() : Conv1(Convolution<5, 5, 1, 30, 0, 1, T>(-0.1, 0.1)),
+                    Affine1(Affine<12*12*30, 100, T>(-0.1, 0.1)),
+                    Affine2(Affine<100, 10, T>(-0.1, 0.1)) {};
   Convolution<5, 5, 1, 30, 0, 1, T> Conv1;
   Relu<T> Relu1;
   Pooling<2, 2, 0, 2, T> Pool1;
@@ -241,7 +248,7 @@ void CNN<T>::dc_save(std::string fname) {
   dc.Conv1.saveParams(&p);
   dc.Conv2.saveParams(&p);
   dc.Affine1.saveParams(&p);
-  std::fstream output(home+"utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
+  std::fstream output(home+"/utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
   if (!p.SerializeToOstream(&output)) {
     std::cerr << "Failed to write params." << std::endl;
   }
@@ -259,23 +266,37 @@ void CNN<T>::run() {
   Tensor1D<10, T> t;
   CNN<T> cnn;
  
-  T eps = (T)0.01;
-  int epoch = 5;
-  int image_num = train_X.col / epoch;
+  T eps = (T)0.001;
+  int epoch = train_X.col / 1000;
+  int image_num = 1000;
 
   for (int k = 0; k < epoch; ++k) {
-    for (int i = image_num * k; i < image_num * (k+1); ++i) {
+    for (int i = image_num*k; i < image_num*(k+1); ++i) {
       x.set_v((float*)train_X.ptr + i * x.size(1) * x.size(0));
-      float* y_onehot = mnistOneHot(((unsigned long*) train_y.ptr)[i]);
-      t.set_v(y_onehot);
+      t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
+      // std::string home = getenv("HOME");
+      // std::stringstream sFile;
+      // sFile << home << "/utokyo-kudohlab/cnn_cpp/data/arithmatic/10E_2_"
+      //       << std::setw(5) << std::setfill('0') << i << ".pb";
       cnn.simple_train(x, t, eps);
-      free(y_onehot);
+      // using namespace google::protobuf::io;
+      // std::ofstream output(sFile.str(), std::ofstream::out | std::ofstream::trunc
+      //                      | std::ofstream::binary);
+      // OstreamOutputStream outputFileStream(&output);
+      // GzipOutputStream::Options options;
+      // options.format = GzipOutputStream::GZIP;
+      // options.compression_level = 9;
+      // GzipOutputStream gzip_stream(&outputFileStream, options);
+      // if (!(p.SerializeToZeroCopyStream(&gzip_stream))) {
+      //   std::cerr << "Failed to write values." << std::endl;
+      // }
+      // p.Clear();
     }
-
     int cnt = 0;
     for (int i = 0; i < test_X.col; ++i) {
       x.set_v((float*)test_X.ptr + i * x.size(1) * x.size(0));
       unsigned long y = cnn.simple_predict(x);
+      // p.Clear();
       if (y == ((unsigned long*)test_y.ptr)[i])
         ++cnt;
     }

@@ -4,6 +4,8 @@
 #include <typeinfo>
 #include <random>
 
+#include "util/float_macro.hpp"
+
 template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
 class Tensor {
 private:
@@ -115,7 +117,7 @@ Tensor<dim1, dim2, dim3, dim4, dim5, T> Tensor<dim1, dim2, dim3, dim4, dim5, T>
 ::operator+(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& y) const {
   Tensor<dim1, dim2, dim3, dim4, dim5, T> ans;
   for (int i = 0; i < size_; ++i) {
-    ans[i] = v_[i] + y[i];
+    ans[i] = ADD(v_[i], y[i]);
   }
   return ans;
 }
@@ -125,7 +127,7 @@ Tensor<dim1, dim2, dim3, dim4, dim5, T> Tensor<dim1, dim2, dim3, dim4, dim5, T>
 ::operator-(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& y) const {
   Tensor<dim1, dim2, dim3, dim4, dim5, T> ans;
   for (int i = 0; i < size_; ++i) {
-    ans[i] = v_[i] - y[i];
+    ans[i] = SUB(v_[i], y[i]);
   }
   return ans;
 }
@@ -135,7 +137,7 @@ Tensor<dim1, dim2, dim3, dim4, dim5, T> Tensor<dim1, dim2, dim3, dim4, dim5, T>
 ::operator*(const Tensor<dim1, dim2, dim3, dim4, dim5, T>& y) const {
   Tensor<dim1, dim2, dim3, dim4, dim5, T> ans;
   for (int i = 0; i < size_; ++i) {
-    ans[i] = v_[i] * y[i];
+    ans[i] = MUL(v_[i], y[i]);
   }
   return ans;
 }
@@ -145,7 +147,7 @@ Tensor<dim1, dim2, dim3, dim4, dim5, T> Tensor<dim1, dim2, dim3, dim4, dim5, T>
 ::times(const T& y) const {
   Tensor<dim1, dim2, dim3, dim4, dim5, T> ans;
   for (int i = 0; i < size_; ++i) {
-    ans[i] = v_[i] * y;
+    ans[i] = MUL(v_[i], y);
   }
   return ans;
 }
