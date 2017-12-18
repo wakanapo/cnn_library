@@ -16,8 +16,6 @@ T multiple(const T a, const T b, const char* file, int line) {
   // c->set_a(a);
   // c->set_b(b);
   // c->set_ans(a*b);
-  // float a_ = BitConverter(E, M, a);
-  // float b_ = BitConverter(E, M, b);
   return a * b;
 }
 
@@ -30,8 +28,6 @@ T division(const T a, const T b, const char* file, int line) {
   // c->set_a(a);
   // c->set_b(b);
   // c->set_ans(a/b);
-  // float a_ = BitConverter(E, M, a);
-  // float b_ = BitConverter(E, M, b);
   return a / b;
 }
 
@@ -44,8 +40,6 @@ T add(const T a, const T b, const char* file, int line) {
   // c->set_a(a);
   // c->set_b(b);
   // c->set_ans(a+b);
-  // float a_ = BitConverter(E, M, a);
-  // float b_ = BitConverter(E, M, b);
   return a + b ;
 }
 
@@ -58,8 +52,6 @@ T sub(const T a, const T b, const char* file, int line) {
   // c->set_a(a);
   // c->set_b(b);
   // c->set_ans(a-b);
-  // float a_ = BitConverter(E, M, a);
-  // float b_ = BitConverter(E, M, b);
   return a - b;
 }
 

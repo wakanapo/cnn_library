@@ -272,11 +272,11 @@ void CNN<T>::dc_save(std::string fname) {
 
 template <typename T>
 void CNN<T>::run() {
-  const data train_X = readMnistImages<T>(TRAIN);
-  const data train_y = readMnistLabels(TRAIN);
+  const Data train_X = ReadMnistImages<T>(TRAIN);
+  const Data train_y = ReadMnistLabels(TRAIN);
 
-  const data test_X = readMnistImages<T>(TEST);
-  const data test_y = readMnistLabels(TEST);
+  const Data test_X = ReadMnistImages<T>(TEST);
+  const Data test_y = ReadMnistLabels(TEST);
 
   Tensor2D<28, 28, T> x;
   Tensor1D<10, T> t;
@@ -288,8 +288,8 @@ void CNN<T>::run() {
 
   for (int k = 0; k < epoch; ++k) {
     for (int i = image_num*k; i < image_num*(k+1); ++i) {
-      x.set_v((T*)train_X.ptr + i * x.size(1) * x.size(0));
-      t.set_v(mnistOneHot<T>(((unsigned long*) train_y.ptr)[i]));
+      x.set_v((T*)train_X.ptr_ + i * x.size(1) * x.size(0));
+      t.set_v(mnistOneHot<T>(((unsigned long*) train_y.ptr_)[i]));
       // std::string home = getenv("HOME");
       // std::stringstream sFile;
       // sFile << home << "/utokyo-kudohlab/cnn_cpp/data/arithmatic/10E_2_"
@@ -311,10 +311,10 @@ void CNN<T>::run() {
     int cnt = 0;
     auto start = std::chrono::system_clock::now();
     for (int i = 0; i < 3000; ++i) {
-      x.set_v((T*)test_X.ptr + i * x.size(1) * x.size(0));
+      x.set_v((T*)test_X.ptr_ + i * x.size(1) * x.size(0));
       unsigned long y = cnn.simple_predict(x);
       // p.Clear();
-      if (y == ((unsigned long*)test_y.ptr)[i])
+      if (y == ((unsigned long*)test_y.ptr_)[i])
         ++cnt;
     }
     auto end = std::chrono::system_clock::now();
@@ -328,17 +328,17 @@ void CNN<T>::run() {
   }
 
   cnn.simple_save("double_params.pb");
-  free(train_X.ptr);
-  free(train_y.ptr);
+  free(train_X.ptr_);
+  free(train_y.ptr_);
 
-  free(test_X.ptr);
-  free(test_y.ptr);
+  free(test_X.ptr_);
+  free(test_y.ptr_);
 }
 
 template <typename T>
 void CNN<T>::inference() {
-  const data test_X = readMnistImages<T>(TEST);
-  const data test_y = readMnistLabels(TEST);
+  const Data test_X = ReadMnistImages<T>(TEST);
+  const Data test_y = ReadMnistLabels(TEST);
 
   Tensor2D<28, 28, T> x;
   CNN<T> cnn;
@@ -346,9 +346,9 @@ void CNN<T>::inference() {
   int cnt = 0;
   auto start = std::chrono::system_clock::now();
   for (int i = 0; i < 3000; ++i) {
-    x.set_v((T*)test_X.ptr + i * x.size(1) * x.size(0));
+    x.set_v((T*)test_X.ptr_ + i * x.size(1) * x.size(0));
     unsigned long y = cnn.simple_predict(x);
-    if (y == ((unsigned long*)test_y.ptr)[i])
+    if (y == ((unsigned long*)test_y.ptr_)[i])
       ++cnt;
   }
   auto end = std::chrono::system_clock::now();
@@ -359,7 +359,8 @@ void CNN<T>::inference() {
             << std::endl;
   std::cout << "Accuracy: " << (float)cnt / (float)3000 << std::endl;
   
-  free(test_X.ptr);
-  free(test_y.ptr);
+  free(test_X.ptr_);
+  free(test_y.ptr_);
 }
+
 
