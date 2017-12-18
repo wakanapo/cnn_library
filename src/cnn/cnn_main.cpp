@@ -7,8 +7,9 @@
 
 using half_float::half;
 int main() {
-  // CNN<double>::run();
-  CNN<half>::inference();
+  // TODO(wakanapo): Make it switchable with runtime flag.
+  CNN<float>::run();
+  // CNN<half>::inference();
   return 0;
 }
   

@@ -33,7 +33,7 @@ TEST(ReadDataTest, OneHot) {
   unsigned long t = 2;
   expected[t] = 1.0;
 
-  float* actual = mnistOneHot(t);
+  float* actual = mnistOneHot<float>(t);
   EXPECT_EQ(fmemcmp(expected, actual, sizeof(expected)), 0);
 }
 
