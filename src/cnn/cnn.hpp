@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <cstdlib>
 #include <fstream>
 #include <fcntl.h>
@@ -55,10 +56,12 @@ public:
   void simple_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps);
   unsigned long simple_predict(Tensor2D<28, 28, T>& x);
   void simple_save(std::string fname);
+  void simple_load(std::string fname);
   void dc_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps);
   unsigned long dc_predict(Tensor2D<28, 28, T>& x);
   void dc_save(std::string fname);
   static void run();
+  static void inference();
 private:
   SimpleConvNet<T> simple;
   DoubleConvNet<T> dc;
@@ -151,6 +154,19 @@ void CNN<T>::simple_save(std::string fname) {
   if (!p.SerializeToOstream(&output)) {
     std::cerr << "Failed to write params." << std::endl;
   }
+}
+
+template <typename T>
+void CNN<T>::simple_load(std::string fname) {
+  std::string home = getenv("HOME");
+  CnnProto::Params p;
+  std::fstream input(home+"/utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
+  if (!p.SerializeToOstream(&input)) {
+    std::cerr << "Failed to write params." << std::endl;
+  }
+  simple.Conv1.loadParams(&p, 0);
+  simple.Affine1.loadParams(&p, 1);
+  simple.Affine2.loadParams(&p, 2);
 }
 
 template <typename T>
@@ -266,9 +282,9 @@ void CNN<T>::run() {
   Tensor1D<10, T> t;
   CNN<T> cnn;
  
-  T eps = (T)0.001;
-  int epoch = train_X.col / 1000;
-  int image_num = 1000;
+  T eps = (T)0.01;
+  int epoch = 6;
+  int image_num = 10000;
 
   for (int k = 0; k < epoch; ++k) {
     for (int i = image_num*k; i < image_num*(k+1); ++i) {
@@ -293,21 +309,56 @@ void CNN<T>::run() {
       // p.Clear();
     }
     int cnt = 0;
-    for (int i = 0; i < test_X.col; ++i) {
+    auto start = std::chrono::system_clock::now();
+    for (int i = 0; i < 3000; ++i) {
       x.set_v((float*)test_X.ptr + i * x.size(1) * x.size(0));
       unsigned long y = cnn.simple_predict(x);
       // p.Clear();
       if (y == ((unsigned long*)test_y.ptr)[i])
         ++cnt;
     }
+    auto end = std::chrono::system_clock::now();
+    auto diff = end - start;
+    std::cout << "Inference time = "
+              << std::chrono::duration_cast<std::chrono::microseconds>(diff).count()
+              << " microsec."
+              << std::endl;
     std::cout << "Epoc: " << k << std::endl;
-    std::cout << "Accuracy: " << (float)cnt / (float)test_X.col << std::endl;
+    std::cout << "Accuracy: " << (float)cnt / (float)3000 << std::endl;
   }
 
-  // cnn.simple_save("simple_half_normal.pb");
+  cnn.simple_save("double_params.pb");
   free(train_X.ptr);
   free(train_y.ptr);
 
+  free(test_X.ptr);
+  free(test_y.ptr);
+}
+
+template <typename T>
+void CNN<T>::inference() {
+  const data test_X = readMnistImages(TEST);
+  const data test_y = readMnistLabels(TEST);
+
+  Tensor2D<28, 28, T> x;
+  CNN<T> cnn;
+  cnn.simple_load("half_params.pb");
+  int cnt = 0;
+  auto start = std::chrono::system_clock::now();
+  for (int i = 0; i < 3000; ++i) {
+    x.set_v((float*)test_X.ptr + i * x.size(1) * x.size(0));
+    unsigned long y = cnn.simple_predict(x);
+    if (y == ((unsigned long*)test_y.ptr)[i])
+      ++cnt;
+  }
+  auto end = std::chrono::system_clock::now();
+  auto diff = end - start;
+  std::cout << "Inference time = "
+            << std::chrono::duration_cast<std::chrono::microseconds>(diff).count()
+            << " microsec."
+            << std::endl;
+  std::cout << "Accuracy: " << (float)cnt / (float)3000 << std::endl;
+  
   free(test_X.ptr);
   free(test_y.ptr);
 }

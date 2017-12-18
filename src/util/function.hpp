@@ -127,8 +127,8 @@ void Function::deriv_softmax(Tensor<dim1, dim2, dim3, dim4, dim5, T> *t) {
       }
       for (int j = 0; j < row; ++j) {
         int idx = l*(row*col) + k*row + j;
-        v[idx] = DIV(exp(v[idx]), sum);
-        v[idx] = MUL(v[idx], SUB(1.0, Converter::ToFloat(v[idx])));
+        v[idx] = exp(v[idx]) / sum;
+        v[idx] = v[idx] * (1.0 - Converter::ToDouble(v[idx]));
       }
     }
   }

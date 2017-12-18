@@ -9,6 +9,7 @@ template<int w_row, int w_col, int input, int output, int P, int S, typename T>
 class Convolution {
 public:
   Convolution(const float low, const float high);
+  void loadParams(CnnProto::Params* p, int idx);
   void saveParams(CnnProto::Params* p) const;
   template<int x_row, int x_col, int a_row, int a_col>
   void forward(const Tensor3D<x_row, x_col, input, T>& x,
@@ -38,13 +39,23 @@ Convolution<w_row, w_col, input, output, P, S, T>::Convolution(const float low, 
 
 template<int w_row, int w_col, int input, int output, int P, int S, typename T>
 void Convolution<w_row, w_col, input, output, P, S, T>
+::loadParams(CnnProto::Params* p, int idx) {
+  for (int i = 0; i < p->weights(idx).w_size(); ++i)
+    w_[i] = p->weights(idx).w(i);
+  for (int i = 0; i < p->biases(idx).b_size(); ++i)
+    b_[i] = p->biases(idx).b(i);
+}
+
+
+template<int w_row, int w_col, int input, int output, int P, int S, typename T>
+void Convolution<w_row, w_col, input, output, P, S, T>
 ::saveParams(CnnProto::Params* p) const {
   CnnProto::Weight* w = p->add_weights();
   CnnProto::Bias* b = p->add_biases();
   for (int i = 0; i < w_.size(); ++i)
-    w->mutable_w()->Add(Converter::ToFloat(w_[i]));
+    w->mutable_w()->Add(Converter::ToDouble(w_[i]));
   for (int i = 0; i < b_.size(); ++i)
-    b->mutable_b()->Add(Converter::ToFloat(b_[i]));
+    b->mutable_b()->Add(Converter::ToDouble(b_[i]));
 }
 
 template<int w_row, int w_col, int input, int output, int P, int S, typename T>
@@ -149,6 +160,7 @@ template<int input, int output, typename T>
 class Affine {
 public:
   Affine(const float low, const float high);
+  void loadParams(CnnProto::Params* p, int idx);
   void saveParams(CnnProto::Params* p) const;
   void forward(const Tensor1D<input, T>& x, Tensor1D<output, T>* ans) const;
   void backward(const Tensor1D<output, T>& delta, const Tensor1D<input, T>& x,
@@ -169,13 +181,22 @@ Affine<input, output, T>::Affine(const float low, const float high) {
 }
 
 template<int input, int output, typename T>
+void Affine<input, output, T>
+::loadParams(CnnProto::Params* p, int idx) {
+  for (int i = 0; i < p->weights(idx).w_size(); ++i)
+    w_[i] = p->weights(idx).w(i);
+  for (int i = 0; i < p->biases(idx).b_size(); ++i)
+    b_[i] = p->biases(idx).b(i);
+}
+
+template<int input, int output, typename T>
 void Affine<input, output, T>::saveParams(CnnProto::Params *p) const {
   CnnProto::Weight* w = p->add_weights();
   CnnProto::Bias* b = p->add_biases();
   for (int i = 0; i < w_.size(); ++i)
-    w->mutable_w()->Add(Converter::ToFloat(w_[i]));
+    w->mutable_w()->Add(Converter::ToDouble(w_[i]));
   for (int i = 0; i < b_.size(); ++i)
-    b->mutable_b()->Add(Converter::ToFloat(b_[i]));
+    b->mutable_b()->Add(Converter::ToDouble(b_[i]));
 }
 
 template<int input, int output, typename T>

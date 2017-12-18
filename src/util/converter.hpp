@@ -4,10 +4,14 @@
 
 class Converter {
 public:
-template<typename T>
-static float ToFloat(const T& other) {
-  return other.toFloat();
-}
+  template<typename T>
+  static float ToFloat(const T& other) {
+    return other.toFloat();
+  }
+  template<typename T>
+  static double ToDouble(const T& other) {
+    return other.toFloat();
+  }
 };
 
 template<>
@@ -16,3 +20,13 @@ float Converter::ToFloat(const float& other);
 using half_float::half;
 template<>
 float Converter::ToFloat(const half& other);
+
+template<>
+double Converter::ToDouble(const double& other);
+
+template<>
+double Converter::ToDouble(const float& other);
+
+using half_float::half;
+template<>
+double Converter::ToDouble(const half& other);

@@ -40,8 +40,8 @@ data readMnistImages(status st) {
   n_cols = reverseInt(n_cols);
   int image_size = n_rows * n_cols;
 
-  float* datasets =
-    (float*)malloc(sizeof(float) * number_of_images * image_size);
+  double* datasets =
+    (double*)malloc(sizeof(double) * number_of_images * image_size);
   for (int n = 0; n < number_of_images; ++n) {
     for (int i = 0; i < n_rows; ++i) {
       for (int j = 0; j < n_cols; ++j) {
@@ -49,7 +49,7 @@ data readMnistImages(status st) {
         err = fread(&temp, sizeof(temp), 1, fp);
         if (err < 1)
           printf("File read error!\n");
-        datasets[n * image_size + i * n_cols + j] = (float)temp / 255.0;
+        datasets[n * image_size + i * n_cols + j] = (double)temp / 255.0;
       }
     }
   }

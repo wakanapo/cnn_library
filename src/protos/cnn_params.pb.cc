@@ -135,7 +135,7 @@ void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
       "\n\020cnn_params.proto\022\010CnnProto\"\027\n\006Weight\022\r"
-      "\n\001w\030\001 \003(\002B\002\020\001\"\025\n\004Bias\022\r\n\001b\030\001 \003(\002B\002\020\001\"K\n\006"
+      "\n\001w\030\001 \003(\001B\002\020\001\"\025\n\004Bias\022\r\n\001b\030\001 \003(\001B\002\020\001\"K\n\006"
       "Params\022!\n\007weights\030\001 \003(\0132\020.CnnProto.Weigh"
       "t\022\036\n\006biases\030\002 \003(\0132\016.CnnProto.Biasb\006proto"
       "3"
@@ -239,18 +239,18 @@ bool Weight::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // repeated float w = 1 [packed = true];
+      // repeated double w = 1 [packed = true];
       case 1: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
-                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
                  input, this->mutable_w())));
         } else if (
             static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(13u /* 13 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(9u /* 9 & 0xFF */)) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
-                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
                  1, 10u, input, this->mutable_w())));
         } else {
           goto handle_unusual;
@@ -284,12 +284,12 @@ void Weight::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // repeated float w = 1 [packed = true];
+  // repeated double w = 1 [packed = true];
   if (this->w_size() > 0) {
     ::google::protobuf::internal::WireFormatLite::WriteTag(1, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
     output->WriteVarint32(static_cast< ::google::protobuf::uint32>(
         _w_cached_byte_size_));
-    ::google::protobuf::internal::WireFormatLite::WriteFloatArray(
+    ::google::protobuf::internal::WireFormatLite::WriteDoubleArray(
       this->w().data(), this->w_size(), output);
   }
 
@@ -307,7 +307,7 @@ void Weight::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // repeated float w = 1 [packed = true];
+  // repeated double w = 1 [packed = true];
   if (this->w_size() > 0) {
     target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
       1,
@@ -317,7 +317,7 @@ void Weight::SerializeWithCachedSizes(
         static_cast< ::google::protobuf::uint32>(
             _w_cached_byte_size_), target);
     target = ::google::protobuf::internal::WireFormatLite::
-      WriteFloatNoTagToArray(this->w_, target);
+      WriteDoubleNoTagToArray(this->w_, target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -337,10 +337,10 @@ size_t Weight::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
   }
-  // repeated float w = 1 [packed = true];
+  // repeated double w = 1 [packed = true];
   {
     unsigned int count = static_cast<unsigned int>(this->w_size());
-    size_t data_size = 4UL * count;
+    size_t data_size = 8UL * count;
     if (data_size > 0) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
@@ -422,31 +422,31 @@ void Weight::InternalSwap(Weight* other) {
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
 // Weight
 
-// repeated float w = 1 [packed = true];
+// repeated double w = 1 [packed = true];
 int Weight::w_size() const {
   return w_.size();
 }
 void Weight::clear_w() {
   w_.Clear();
 }
-float Weight::w(int index) const {
+double Weight::w(int index) const {
   // @@protoc_insertion_point(field_get:CnnProto.Weight.w)
   return w_.Get(index);
 }
-void Weight::set_w(int index, float value) {
+void Weight::set_w(int index, double value) {
   w_.Set(index, value);
   // @@protoc_insertion_point(field_set:CnnProto.Weight.w)
 }
-void Weight::add_w(float value) {
+void Weight::add_w(double value) {
   w_.Add(value);
   // @@protoc_insertion_point(field_add:CnnProto.Weight.w)
 }
-const ::google::protobuf::RepeatedField< float >&
+const ::google::protobuf::RepeatedField< double >&
 Weight::w() const {
   // @@protoc_insertion_point(field_list:CnnProto.Weight.w)
   return w_;
 }
-::google::protobuf::RepeatedField< float >*
+::google::protobuf::RepeatedField< double >*
 Weight::mutable_w() {
   // @@protoc_insertion_point(field_mutable_list:CnnProto.Weight.w)
   return &w_;
@@ -532,18 +532,18 @@ bool Bias::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // repeated float b = 1 [packed = true];
+      // repeated double b = 1 [packed = true];
       case 1: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
-                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
                  input, this->mutable_b())));
         } else if (
             static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(13u /* 13 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(9u /* 9 & 0xFF */)) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
-                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
                  1, 10u, input, this->mutable_b())));
         } else {
           goto handle_unusual;
@@ -577,12 +577,12 @@ void Bias::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // repeated float b = 1 [packed = true];
+  // repeated double b = 1 [packed = true];
   if (this->b_size() > 0) {
     ::google::protobuf::internal::WireFormatLite::WriteTag(1, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
     output->WriteVarint32(static_cast< ::google::protobuf::uint32>(
         _b_cached_byte_size_));
-    ::google::protobuf::internal::WireFormatLite::WriteFloatArray(
+    ::google::protobuf::internal::WireFormatLite::WriteDoubleArray(
       this->b().data(), this->b_size(), output);
   }
 
@@ -600,7 +600,7 @@ void Bias::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // repeated float b = 1 [packed = true];
+  // repeated double b = 1 [packed = true];
   if (this->b_size() > 0) {
     target = ::google::protobuf::internal::WireFormatLite::WriteTagToArray(
       1,
@@ -610,7 +610,7 @@ void Bias::SerializeWithCachedSizes(
         static_cast< ::google::protobuf::uint32>(
             _b_cached_byte_size_), target);
     target = ::google::protobuf::internal::WireFormatLite::
-      WriteFloatNoTagToArray(this->b_, target);
+      WriteDoubleNoTagToArray(this->b_, target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -630,10 +630,10 @@ size_t Bias::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
   }
-  // repeated float b = 1 [packed = true];
+  // repeated double b = 1 [packed = true];
   {
     unsigned int count = static_cast<unsigned int>(this->b_size());
-    size_t data_size = 4UL * count;
+    size_t data_size = 8UL * count;
     if (data_size > 0) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
@@ -715,31 +715,31 @@ void Bias::InternalSwap(Bias* other) {
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
 // Bias
 
-// repeated float b = 1 [packed = true];
+// repeated double b = 1 [packed = true];
 int Bias::b_size() const {
   return b_.size();
 }
 void Bias::clear_b() {
   b_.Clear();
 }
-float Bias::b(int index) const {
+double Bias::b(int index) const {
   // @@protoc_insertion_point(field_get:CnnProto.Bias.b)
   return b_.Get(index);
 }
-void Bias::set_b(int index, float value) {
+void Bias::set_b(int index, double value) {
   b_.Set(index, value);
   // @@protoc_insertion_point(field_set:CnnProto.Bias.b)
 }
-void Bias::add_b(float value) {
+void Bias::add_b(double value) {
   b_.Add(value);
   // @@protoc_insertion_point(field_add:CnnProto.Bias.b)
 }
-const ::google::protobuf::RepeatedField< float >&
+const ::google::protobuf::RepeatedField< double >&
 Bias::b() const {
   // @@protoc_insertion_point(field_list:CnnProto.Bias.b)
   return b_;
 }
-::google::protobuf::RepeatedField< float >*
+::google::protobuf::RepeatedField< double >*
 Bias::mutable_b() {
   // @@protoc_insertion_point(field_mutable_list:CnnProto.Bias.b)
   return &b_;
