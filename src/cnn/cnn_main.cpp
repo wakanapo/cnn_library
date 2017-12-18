@@ -7,7 +7,7 @@
 
 using half_float::half;
 int main() {
-  CNN<half>::run();
+  CNN<float>::run();
   // CNN<half>::inference();
   return 0;
 }
