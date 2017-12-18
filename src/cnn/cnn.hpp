@@ -288,7 +288,7 @@ void CNN<T>::run() {
 
   for (int k = 0; k < epoch; ++k) {
     for (int i = image_num*k; i < image_num*(k+1); ++i) {
-      x.set_v((float*)train_X.ptr + i * x.size(1) * x.size(0));
+      x.set_v((double*)train_X.ptr + i * x.size(1) * x.size(0));
       t.set_v(mnistOneHot(((unsigned long*) train_y.ptr)[i]));
       // std::string home = getenv("HOME");
       // std::stringstream sFile;
@@ -311,7 +311,7 @@ void CNN<T>::run() {
     int cnt = 0;
     auto start = std::chrono::system_clock::now();
     for (int i = 0; i < 3000; ++i) {
-      x.set_v((float*)test_X.ptr + i * x.size(1) * x.size(0));
+      x.set_v((double*)test_X.ptr + i * x.size(1) * x.size(0));
       unsigned long y = cnn.simple_predict(x);
       // p.Clear();
       if (y == ((unsigned long*)test_y.ptr)[i])
