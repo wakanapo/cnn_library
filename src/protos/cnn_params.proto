@@ -2,11 +2,11 @@ syntax = "proto3";
 package CnnProto;
 
 message Weight {
-  repeated double w = 1 [packed=true];
+  repeated float w = 1 [packed=true];
 }
 
 message Bias {
-  repeated double b = 1 [packed=true];
+  repeated float b = 1 [packed=true];
 }
 
 message Params {

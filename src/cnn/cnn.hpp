@@ -14,6 +14,7 @@
 
 #include "util/tensor.hpp"
 #include "util/function.hpp"
+#include "util/flags.hpp"
 #include "cnn/layers.hpp"
 #include "util/read_data.hpp"
 #include "protos/cnn_params.pb.h"
@@ -283,37 +284,43 @@ void CNN<T>::run() {
   CNN<T> cnn;
  
   T eps = (T)0.01;
-  int epoch = 6;
-  int image_num = 10000;
+  int epoch = 20;
+  int image_num = 1000;
 
   for (int k = 0; k < epoch; ++k) {
     for (int i = image_num*k; i < image_num*(k+1); ++i) {
       x.set_v((T*)train_X.ptr_ + i * x.size(1) * x.size(0));
       t.set_v(mnistOneHot<T>(((unsigned long*) train_y.ptr_)[i]));
-      // std::string home = getenv("HOME");
-      // std::stringstream sFile;
-      // sFile << home << "/utokyo-kudohlab/cnn_cpp/data/arithmatic/10E_2_"
-      //       << std::setw(5) << std::setfill('0') << i << ".pb";
-      cnn.simple_train(x, t, eps);
-      // using namespace google::protobuf::io;
-      // std::ofstream output(sFile.str(), std::ofstream::out | std::ofstream::trunc
-      //                      | std::ofstream::binary);
-      // OstreamOutputStream outputFileStream(&output);
-      // GzipOutputStream::Options options;
-      // options.format = GzipOutputStream::GZIP;
-      // options.compression_level = 9;
-      // GzipOutputStream gzip_stream(&outputFileStream, options);
-      // if (!(p.SerializeToZeroCopyStream(&gzip_stream))) {
-      //   std::cerr << "Failed to write values." << std::endl;
-      // }
-      // p.Clear();
+      if (Flags::IsSaveArithmetic()) {
+        std::string home = getenv("HOME");
+        std::stringstream sFile;
+        sFile << home << "/utokyo-kudohlab/cnn_cpp/data/arithmatic/10E_2_"
+              << std::setw(5) << std::setfill('0') << i << ".pb";
+        cnn.simple_train(x, t, eps);
+        using namespace google::protobuf::io;
+        std::ofstream output(sFile.str(), std::ofstream::out | std::ofstream::trunc
+                             | std::ofstream::binary);
+        OstreamOutputStream outputFileStream(&output);
+        GzipOutputStream::Options options;
+        options.format = GzipOutputStream::GZIP;
+        options.compression_level = 9;
+        GzipOutputStream gzip_stream(&outputFileStream, options);
+        if (!(p.SerializeToZeroCopyStream(&gzip_stream))) {
+          std::cerr << "Failed to write values." << std::endl;
+        }
+        p.Clear();
+      }
+      else {
+        cnn.simple_train(x, t, eps);
+      }
     }
     int cnt = 0;
     auto start = std::chrono::system_clock::now();
     for (int i = 0; i < 3000; ++i) {
       x.set_v((T*)test_X.ptr_ + i * x.size(1) * x.size(0));
       unsigned long y = cnn.simple_predict(x);
-      // p.Clear();
+      if (Flags::IsSaveArithmetic())
+        p.Clear();
       if (y == ((unsigned long*)test_y.ptr_)[i])
         ++cnt;
     }
@@ -326,8 +333,8 @@ void CNN<T>::run() {
     std::cout << "Epoc: " << k << std::endl;
     std::cout << "Accuracy: " << (float)cnt / (float)3000 << std::endl;
   }
-
-  cnn.simple_save("double_params.pb");
+  if (Flags::IsSaveParams())
+    cnn.simple_save("double_params.pb");
   free(train_X.ptr_);
   free(train_y.ptr_);
 
