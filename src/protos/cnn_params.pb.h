@@ -30,6 +30,30 @@
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
 #include <google/protobuf/unknown_field_set.h>
 // @@protoc_insertion_point(includes)
+
+namespace protobuf_cnn_5fparams_2eproto {
+// Internal implementation detail -- do not use these members.
+struct TableStruct {
+  static const ::google::protobuf::internal::ParseTableField entries[];
+  static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
+  static const ::google::protobuf::internal::ParseTable schema[3];
+  static const ::google::protobuf::internal::FieldMetadata field_metadata[];
+  static const ::google::protobuf::internal::SerializationTable serialization_table[];
+  static const ::google::protobuf::uint32 offsets[];
+};
+void AddDescriptors();
+void InitDefaultsWeightImpl();
+void InitDefaultsWeight();
+void InitDefaultsBiasImpl();
+void InitDefaultsBias();
+void InitDefaultsParamsImpl();
+void InitDefaultsParams();
+inline void InitDefaults() {
+  InitDefaultsWeight();
+  InitDefaultsBias();
+  InitDefaultsParams();
+}
+}  // namespace protobuf_cnn_5fparams_2eproto
 namespace CnnProto {
 class Bias;
 class BiasDefaultTypeInternal;
@@ -41,23 +65,7 @@ class Weight;
 class WeightDefaultTypeInternal;
 extern WeightDefaultTypeInternal _Weight_default_instance_;
 }  // namespace CnnProto
-
 namespace CnnProto {
-
-namespace protobuf_cnn_5fparams_2eproto {
-// Internal implementation detail -- do not call these.
-struct TableStruct {
-  static const ::google::protobuf::internal::ParseTableField entries[];
-  static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[];
-  static const ::google::protobuf::uint32 offsets[];
-  static const ::google::protobuf::internal::FieldMetadata field_metadata[];
-  static const ::google::protobuf::internal::SerializationTable serialization_table[];
-  static void InitDefaultsImpl();
-};
-void AddDescriptors();
-void InitDefaults();
-}  // namespace protobuf_cnn_5fparams_2eproto
 
 // ===================================================================
 
@@ -90,6 +98,7 @@ class Weight : public ::google::protobuf::Message /* @@protoc_insertion_point(cl
   static const ::google::protobuf::Descriptor* descriptor();
   static const Weight& default_instance();
 
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
   static inline const Weight* internal_default_instance() {
     return reinterpret_cast<const Weight*>(
                &_Weight_default_instance_);
@@ -161,7 +170,8 @@ class Weight : public ::google::protobuf::Message /* @@protoc_insertion_point(cl
   ::google::protobuf::RepeatedField< float > w_;
   mutable int _w_cached_byte_size_;
   mutable int _cached_size_;
-  friend struct protobuf_cnn_5fparams_2eproto::TableStruct;
+  friend struct ::protobuf_cnn_5fparams_2eproto::TableStruct;
+  friend void ::protobuf_cnn_5fparams_2eproto::InitDefaultsWeightImpl();
 };
 // -------------------------------------------------------------------
 
@@ -194,6 +204,7 @@ class Bias : public ::google::protobuf::Message /* @@protoc_insertion_point(clas
   static const ::google::protobuf::Descriptor* descriptor();
   static const Bias& default_instance();
 
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
   static inline const Bias* internal_default_instance() {
     return reinterpret_cast<const Bias*>(
                &_Bias_default_instance_);
@@ -265,7 +276,8 @@ class Bias : public ::google::protobuf::Message /* @@protoc_insertion_point(clas
   ::google::protobuf::RepeatedField< float > b_;
   mutable int _b_cached_byte_size_;
   mutable int _cached_size_;
-  friend struct protobuf_cnn_5fparams_2eproto::TableStruct;
+  friend struct ::protobuf_cnn_5fparams_2eproto::TableStruct;
+  friend void ::protobuf_cnn_5fparams_2eproto::InitDefaultsBiasImpl();
 };
 // -------------------------------------------------------------------
 
@@ -298,6 +310,7 @@ class Params : public ::google::protobuf::Message /* @@protoc_insertion_point(cl
   static const ::google::protobuf::Descriptor* descriptor();
   static const Params& default_instance();
 
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
   static inline const Params* internal_default_instance() {
     return reinterpret_cast<const Params*>(
                &_Params_default_instance_);
@@ -381,14 +394,14 @@ class Params : public ::google::protobuf::Message /* @@protoc_insertion_point(cl
   ::google::protobuf::RepeatedPtrField< ::CnnProto::Weight > weights_;
   ::google::protobuf::RepeatedPtrField< ::CnnProto::Bias > biases_;
   mutable int _cached_size_;
-  friend struct protobuf_cnn_5fparams_2eproto::TableStruct;
+  friend struct ::protobuf_cnn_5fparams_2eproto::TableStruct;
+  friend void ::protobuf_cnn_5fparams_2eproto::InitDefaultsParamsImpl();
 };
 // ===================================================================
 
 
 // ===================================================================
 
-#if !PROTOBUF_INLINE_NOT_IN_HEADERS
 #ifdef __GNUC__
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
@@ -526,14 +539,12 @@ Params::biases() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
-#endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
 
 
 // @@protoc_insertion_point(namespace_scope)
-
 
 }  // namespace CnnProto
 

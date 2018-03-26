@@ -147,12 +147,12 @@ unsigned long CNN<T>::simple_predict(Tensor2D<28, 28, T>& x) {
 template <typename T>
 void CNN<T>::simple_save(std::string fname) {
   std::string home = getenv("HOME");
-  CnnProto::Params p;
-  simple.Conv1.saveParams(&p);
-  simple.Affine1.saveParams(&p);
-  simple.Affine2.saveParams(&p);
+  CnnProto::Params params;
+  simple.Conv1.saveParams(&params);
+  simple.Affine1.saveParams(&params);
+  simple.Affine2.saveParams(&params);
   std::fstream output(home+"/utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
-  if (!p.SerializeToOstream(&output)) {
+  if (!params.SerializeToOstream(&output)) {
     std::cerr << "Failed to write params." << std::endl;
   }
 }
@@ -334,7 +334,7 @@ void CNN<T>::run() {
     std::cout << "Accuracy: " << (float)cnt / (float)3000 << std::endl;
   }
   if (Flags::IsSaveParams())
-    cnn.simple_save("double_params.pb");
+    cnn.simple_save("float_params.pb");
   free(train_X.ptr_);
   free(train_y.ptr_);
 
@@ -349,7 +349,7 @@ void CNN<T>::inference() {
 
   Tensor2D<28, 28, T> x;
   CNN<T> cnn;
-  cnn.simple_load("half_params.pb");
+  cnn.simple_load("float_params.pb");
   int cnt = 0;
   auto start = std::chrono::system_clock::now();
   for (int i = 0; i < 3000; ++i) {
