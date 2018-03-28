@@ -5,6 +5,7 @@
 #include "cnn/cnn.hpp"
 // #include "util/types.hpp"
 #include "half.hpp"
+#include "util/box_quant.hpp"
 
 using half_float::half;
 int main(int argc, char* argv[]) {

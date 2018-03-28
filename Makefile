@@ -1,4 +1,4 @@
-COMPILER = g++
+COMPILER = clang++
 CFLAGS = -Wall -O2
 TESTFLAGS = -lgtest_main -lgtest -lpthread
 CXXFLAGS = -std=c++11

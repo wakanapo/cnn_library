@@ -24,16 +24,16 @@ void SaveArithmetic(const std::string operator_, const T a, const T b,
 template<typename T>
 T multiple(const T a, const T b, const char* file, int line) {
   T a_, b_;
-  if (Flags::GetType() == CONVERT_FLOAT) {
-    int e = Flags::GetExponent();
-    int m = Flags::GetMantissa();
-    a_ = BitConverter(e, m, a);
-    b_ = BitConverter(e, m, b);
-  }
-  else {
+  // if (Flags::GetType() == CONVERT_FLOAT) {
+  //   int e = Flags::GetExponent();
+  //   int m = Flags::GetMantissa();
+  //   a_ = BitConverter(e, m, a);
+  //   b_ = BitConverter(e, m, b);
+  // }
+  // else {
     a_ = a;
     b_ = b;
-  }
+  // }
   T ans = a_ * b_;
   if (Flags::IsSaveArithmetic()) {
     SaveArithmetic("*", a_, b_, ans, file, line);
@@ -44,16 +44,16 @@ T multiple(const T a, const T b, const char* file, int line) {
 template<typename T>
 T division(const T a, const T b, const char* file, int line) {
   T a_, b_;
-  if (Flags::GetType() == CONVERT_FLOAT) {
-    int e = Flags::GetExponent();
-    int m = Flags::GetMantissa();
-    a_ = BitConverter(e, m, a);
-    b_ = BitConverter(e, m, b);
-  }
-  else {
+  // if (Flags::GetType() == CONVERT_FLOAT) {
+  //   int e = Flags::GetExponent();
+  //   int m = Flags::GetMantissa();
+  //   a_ = BitConverter(e, m, a);
+  //   b_ = BitConverter(e, m, b);
+  // }
+  // else {
     a_ = a;
     b_ = b;
-  }
+  // }
   T ans = a_ / b_;
   if (Flags::IsSaveArithmetic()) {
     SaveArithmetic("/", a_, b_, ans, file, line);
@@ -64,16 +64,16 @@ T division(const T a, const T b, const char* file, int line) {
 template<typename T>
 T add(const T a, const T b, const char* file, int line) {
   T a_, b_;
-  if (Flags::GetType() == CONVERT_FLOAT) {
-    int e = Flags::GetExponent();
-    int m = Flags::GetMantissa();
-    a_ = BitConverter(e, m, a);
-    b_ = BitConverter(e, m, b);
-  }
-  else {
+  // if (Flags::GetType() == CONVERT_FLOAT) {
+  //   int e = Flags::GetExponent();
+  //   int m = Flags::GetMantissa();
+  //   a_ = BitConverter(e, m, a);
+  //   b_ = BitConverter(e, m, b);
+  // }
+  // else {
     a_ = a;
     b_ = b;
-  }
+  // }
   T ans = a_ + b_;
   if (Flags::IsSaveArithmetic()) {
     SaveArithmetic("+", a_, b_, ans, file, line);
@@ -84,16 +84,16 @@ T add(const T a, const T b, const char* file, int line) {
 template<typename T>
 T sub(const T a, const T b, const char* file, int line) {
   T a_, b_;
-  if (Flags::GetType() == CONVERT_FLOAT) {
-    int e = Flags::GetExponent();
-    int m = Flags::GetMantissa();
-    a_ = BitConverter(e, m, a);
-    b_ = BitConverter(e, m, b);
-  }
-  else {
+  // if (Flags::GetType() == CONVERT_FLOAT) {
+  //   int e = Flags::GetExponent();
+  //   int m = Flags::GetMantissa();
+  //   a_ = BitConverter(e, m, a);
+  //   b_ = BitConverter(e, m, b);
+  // }
+  // else {
     a_ = a;
     b_ = b;
-  }
+  // }
   T ans = a_ - b_;
   if (Flags::IsSaveArithmetic()) {
     SaveArithmetic("-", a_, b_, ans, file, line);

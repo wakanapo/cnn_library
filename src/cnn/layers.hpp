@@ -1,5 +1,6 @@
 #pragma once
 
+#include "util/box_quant.hpp"
 #include "util/converter.hpp"
 #include "util/function.hpp"
 #include "util/tensor.hpp"
@@ -41,9 +42,9 @@ template<int w_row, int w_col, int input, int output, int P, int S, typename T>
 void Convolution<w_row, w_col, input, output, P, S, T>
 ::loadParams(CnnProto::Params* p, int idx) {
   for (int i = 0; i < p->weights(idx).w_size(); ++i)
-    w_[i] = p->weights(idx).w(i);
+    w_[i] = Box(p->weights(idx).w(i)).toFloat();
   for (int i = 0; i < p->biases(idx).b_size(); ++i)
-    b_[i] = p->biases(idx).b(i);
+    b_[i] = Box(p->biases(idx).b(i)).toFloat();
 }
 
 
@@ -184,9 +185,9 @@ template<int input, int output, typename T>
 void Affine<input, output, T>
 ::loadParams(CnnProto::Params* p, int idx) {
   for (int i = 0; i < p->weights(idx).w_size(); ++i)
-    w_[i] = p->weights(idx).w(i);
+    w_[i] = Box(p->weights(idx).w(i)).toFloat();
   for (int i = 0; i < p->biases(idx).b_size(); ++i)
-    b_[i] = p->biases(idx).b(i);
+    b_[i] = Box(p->biases(idx).b(i)).toFloat();
 }
 
 template<int input, int output, typename T>

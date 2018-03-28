@@ -161,9 +161,9 @@ template <typename T>
 void CNN<T>::simple_load(std::string fname) {
   std::string home = getenv("HOME");
   CnnProto::Params p;
-  std::fstream input(home+"/utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
-  if (!p.SerializeToOstream(&input)) {
-    std::cerr << "Failed to write params." << std::endl;
+  std::fstream input(home+"/utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::in | std::ios::binary);
+  if (!p.ParseFromIstream(&input)) {
+    std::cerr << "Failed to load params." << std::endl;
   }
   simple.Conv1.loadParams(&p, 0);
   simple.Affine1.loadParams(&p, 1);
