@@ -30,27 +30,6 @@
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
 #include <google/protobuf/unknown_field_set.h>
 // @@protoc_insertion_point(includes)
-
-namespace protobuf_arithmatic_2eproto {
-// Internal implementation detail -- do not use these members.
-struct TableStruct {
-  static const ::google::protobuf::internal::ParseTableField entries[];
-  static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[2];
-  static const ::google::protobuf::internal::FieldMetadata field_metadata[];
-  static const ::google::protobuf::internal::SerializationTable serialization_table[];
-  static const ::google::protobuf::uint32 offsets[];
-};
-void AddDescriptors();
-void InitDefaultsCalculationImpl();
-void InitDefaultsCalculation();
-void InitDefaultsOneImpl();
-void InitDefaultsOne();
-inline void InitDefaults() {
-  InitDefaultsCalculation();
-  InitDefaultsOne();
-}
-}  // namespace protobuf_arithmatic_2eproto
 namespace Arithmatic {
 class Calculation;
 class CalculationDefaultTypeInternal;
@@ -59,7 +38,23 @@ class One;
 class OneDefaultTypeInternal;
 extern OneDefaultTypeInternal _One_default_instance_;
 }  // namespace Arithmatic
+
 namespace Arithmatic {
+
+namespace protobuf_arithmatic_2eproto {
+// Internal implementation detail -- do not call these.
+struct TableStruct {
+  static const ::google::protobuf::internal::ParseTableField entries[];
+  static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
+  static const ::google::protobuf::internal::ParseTable schema[];
+  static const ::google::protobuf::uint32 offsets[];
+  static const ::google::protobuf::internal::FieldMetadata field_metadata[];
+  static const ::google::protobuf::internal::SerializationTable serialization_table[];
+  static void InitDefaultsImpl();
+};
+void AddDescriptors();
+void InitDefaults();
+}  // namespace protobuf_arithmatic_2eproto
 
 // ===================================================================
 
@@ -92,7 +87,6 @@ class Calculation : public ::google::protobuf::Message /* @@protoc_insertion_poi
   static const ::google::protobuf::Descriptor* descriptor();
   static const Calculation& default_instance();
 
-  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
   static inline const Calculation* internal_default_instance() {
     return reinterpret_cast<const Calculation*>(
                &_Calculation_default_instance_);
@@ -208,8 +202,7 @@ class Calculation : public ::google::protobuf::Message /* @@protoc_insertion_poi
   float b_;
   float ans_;
   mutable int _cached_size_;
-  friend struct ::protobuf_arithmatic_2eproto::TableStruct;
-  friend void ::protobuf_arithmatic_2eproto::InitDefaultsCalculationImpl();
+  friend struct protobuf_arithmatic_2eproto::TableStruct;
 };
 // -------------------------------------------------------------------
 
@@ -242,7 +235,6 @@ class One : public ::google::protobuf::Message /* @@protoc_insertion_point(class
   static const ::google::protobuf::Descriptor* descriptor();
   static const One& default_instance();
 
-  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
   static inline const One* internal_default_instance() {
     return reinterpret_cast<const One*>(
                &_One_default_instance_);
@@ -313,14 +305,14 @@ class One : public ::google::protobuf::Message /* @@protoc_insertion_point(class
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::RepeatedPtrField< ::Arithmatic::Calculation > calc_;
   mutable int _cached_size_;
-  friend struct ::protobuf_arithmatic_2eproto::TableStruct;
-  friend void ::protobuf_arithmatic_2eproto::InitDefaultsOneImpl();
+  friend struct protobuf_arithmatic_2eproto::TableStruct;
 };
 // ===================================================================
 
 
 // ===================================================================
 
+#if !PROTOBUF_INLINE_NOT_IN_HEADERS
 #ifdef __GNUC__
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
@@ -526,10 +518,12 @@ One::calc() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+#endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
 // -------------------------------------------------------------------
 
 
 // @@protoc_insertion_point(namespace_scope)
+
 
 }  // namespace Arithmatic
 

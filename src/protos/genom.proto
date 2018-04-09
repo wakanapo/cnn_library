@@ -1,0 +1,10 @@
+syntax = "proto3";
+package Gene;
+
+message Gene {
+  repeated float gene = 1 [packed=true];
+}
+
+message Genoms {
+  repeated Gene genoms = 1;
+}

@@ -1,7 +1,7 @@
 COMPILER = clang++
-CFLAGS = -Wall -O2
+CFLAGS = -Wall -O2 -pthread
 TESTFLAGS = -lgtest_main -lgtest -lpthread
-CXXFLAGS = -std=c++11
+CXXFLAGS = -std=c++14
 
 BINDIR := bin
 
@@ -23,8 +23,11 @@ $(BINDIR)/mlp: src/mlp/mlp_main.cpp src/util/converter.cpp $(BINDIR)
 $(BINDIR)/cnn: src/cnn/cnn_main.cpp src/protos/cnn_params.pb.cc src/protos/arithmatic.pb.cc src/util/converter.cpp src/util/flags.cpp $(BINDIR)
 	$(COMPILER) $(CXXFLAGS) -o $@ src/cnn/cnn_main.cpp src/protos/cnn_params.pb.cc src/protos/arithmatic.pb.cc src/util/converter.cpp src/util/flags.cpp -I$(SRCDIR) -I$(INCLUDEDIR) $(CFLAGS) `pkg-config --cflags --libs protobuf`
 
-$(BINDIR)/protoc: src/protos/cnn_params.proto src/protos/arithmatic.proto
-	protoc -I=src/protos --cpp_out=src/protos src/protos/cnn_params.proto src/protos/arithmatic.proto
+$(BINDIR)/ga: src/ga/ga_main.cpp src/protos/cnn_params.pb.cc src/protos/genom.pb.cc src/protos/arithmatic.pb.cc src/util/converter.cpp src/ga/set_gene.cpp  src/util/flags.cpp $(BINDIR)
+	$(COMPILER) $(CXXFLAGS) -o $@ src/ga/ga_main.cpp src/protos/cnn_params.pb.cc src/protos/arithmatic.pb.cc  src/protos/genom.pb.cc src/util/converter.cpp src/ga/set_gene.cpp  src/util/flags.cpp -I$(SRCDIR) -I$(INCLUDEDIR) $(CFLAGS) `pkg-config --cflags --libs protobuf`
+
+$(BINDIR)/protoc: src/protos/cnn_params.proto src/protos/arithmatic.proto src/protos/genom.proto
+	protoc -I=src/protos --cpp_out=src/protos src/protos/cnn_params.proto src/protos/arithmatic.proto src/protos/genom.proto
 
 $(BINDIR)/doubleTo: src/util/float_type.cpp src/protos/cnn_params.pb.cc $(BINDIR)
 	$(COMPILER) $(CXXFLAGS) -o $@ src/util/float_type.cpp src/protos/cnn_params.pb.cc -I$(SRCDIR) -I$(INCLUDEDIR) $(CFLAGS) `pkg-config --cflags --libs protobuf`

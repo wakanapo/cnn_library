@@ -55,7 +55,7 @@ template <typename T>
 class CNN {
 public:
   void simple_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps);
-  unsigned long simple_predict(Tensor2D<28, 28, T>& x);
+  unsigned long simple_predict(Tensor2D<28, 28, T> x) const;
   void simple_save(std::string fname);
   void simple_load(std::string fname);
   void dc_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps);
@@ -112,7 +112,7 @@ void CNN<T>::simple_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& e
 }
 
 template <typename T>
-unsigned long CNN<T>::simple_predict(Tensor2D<28, 28, T>& x) {
+unsigned long CNN<T>::simple_predict(Tensor2D<28, 28, T> x) const {
   Tensor3D<24, 24, 30, T> conv1_ans;
   simple.Conv1.forward(x, &conv1_ans);
 

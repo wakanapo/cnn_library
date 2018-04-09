@@ -3,18 +3,22 @@
 #include <algorithm>
 #include <vector>
 
-#include "util/box_linear.hpp"
+#include "ga/set_gene.hpp"
 
-#define kOffset 2
+#define kOffset 4
 
 class Box {
 public:
-  Box() = default;
-  Box(const Box& other) = default;
-  Box(const Box&& other) : val_(other.get()) {}
-  Box(int other) : val_(other) {}
-  Box(float other) : val_(fromFloat(other)) {}
-  Box(double other) : val_(fromFloat(other)) {}
+  Box() : partation_(GlobalParams::getInstance()->partition()) {};
+  Box(const Box& other) : partation_(GlobalParams::getInstance()->partition()) {};
+  Box(const Box&& other) : partation_(GlobalParams::getInstance()->partition()),
+                           val_(other.get()) {}
+  Box(int other) : partation_(GlobalParams::getInstance()->partition()),
+                   val_(other) {}
+  Box(float other) : partation_(GlobalParams::getInstance()->partition()),
+                     val_(fromFloat(other)) {}
+  Box(double other) : partation_(GlobalParams::getInstance()->partition()),
+                      val_(fromFloat(other)) {}
   
   float toFloat() const {
     if (this->val_ == 0)
@@ -82,7 +86,7 @@ public:
   }
   
 private:
-  std::vector<float> partation_ = range;
+  std::vector<float> partation_;
   int val_;
 };
 
