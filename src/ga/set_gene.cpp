@@ -1,9 +1,9 @@
 #include "set_gene.hpp"
 #include <memory>
-
+#include <thread>
 
 namespace {
-static std::unique_ptr<GlobalParams> g_global_params;
+thread_local static std::unique_ptr<GlobalParams> g_global_params;
 }  // namespace
 
 GlobalParams* GlobalParams::getInstance() {

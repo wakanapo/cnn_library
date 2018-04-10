@@ -3,6 +3,7 @@ package Gene;
 
 message Gene {
   repeated float gene = 1 [packed=true];
+  float evaluation = 2;
 }
 
 message Genoms {
