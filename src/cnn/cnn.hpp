@@ -313,6 +313,7 @@ void CNN<T>::run() {
       else {
         cnn.simple_train(x, t, eps);
       }
+
     }
     int cnt = 0;
     auto start = std::chrono::system_clock::now();
@@ -335,8 +336,6 @@ void CNN<T>::run() {
   }
   if (Flags::IsSaveParams())
     cnn.simple_save("float_params.pb");
-  free(train_X.ptr_);
-  free(train_y.ptr_);
 
   free(test_X.ptr_);
   free(test_y.ptr_);
