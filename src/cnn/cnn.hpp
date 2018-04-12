@@ -14,6 +14,7 @@
 
 #include "util/tensor.hpp"
 #include "util/function.hpp"
+#include "util/flags.hpp"
 #include "cnn/layers.hpp"
 #include "util/read_data.hpp"
 #include "protos/cnn_params.pb.h"
@@ -54,7 +55,7 @@ template <typename T>
 class CNN {
 public:
   void simple_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps);
-  unsigned long simple_predict(Tensor2D<28, 28, T>& x);
+  unsigned long simple_predict(Tensor2D<28, 28, T> x) const;
   void simple_save(std::string fname);
   void simple_load(std::string fname);
   void dc_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& eps);
@@ -111,7 +112,7 @@ void CNN<T>::simple_train(Tensor2D<28, 28, T>& x, Tensor1D<10, T>& t, const T& e
 }
 
 template <typename T>
-unsigned long CNN<T>::simple_predict(Tensor2D<28, 28, T>& x) {
+unsigned long CNN<T>::simple_predict(Tensor2D<28, 28, T> x) const {
   Tensor3D<24, 24, 30, T> conv1_ans;
   simple.Conv1.forward(x, &conv1_ans);
 
@@ -146,12 +147,12 @@ unsigned long CNN<T>::simple_predict(Tensor2D<28, 28, T>& x) {
 template <typename T>
 void CNN<T>::simple_save(std::string fname) {
   std::string home = getenv("HOME");
-  CnnProto::Params p;
-  simple.Conv1.saveParams(&p);
-  simple.Affine1.saveParams(&p);
-  simple.Affine2.saveParams(&p);
+  CnnProto::Params params;
+  simple.Conv1.saveParams(&params);
+  simple.Affine1.saveParams(&params);
+  simple.Affine2.saveParams(&params);
   std::fstream output(home+"/utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
-  if (!p.SerializeToOstream(&output)) {
+  if (!params.SerializeToOstream(&output)) {
     std::cerr << "Failed to write params." << std::endl;
   }
 }
@@ -160,9 +161,9 @@ template <typename T>
 void CNN<T>::simple_load(std::string fname) {
   std::string home = getenv("HOME");
   CnnProto::Params p;
-  std::fstream input(home+"/utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::out | std::ios::trunc | std::ios::binary);
-  if (!p.SerializeToOstream(&input)) {
-    std::cerr << "Failed to write params." << std::endl;
+  std::fstream input(home+"/utokyo-kudohlab/cnn_cpp/data/"+fname, std::ios::in | std::ios::binary);
+  if (!p.ParseFromIstream(&input)) {
+    std::cerr << "Failed to load params." << std::endl;
   }
   simple.Conv1.loadParams(&p, 0);
   simple.Affine1.loadParams(&p, 1);
@@ -283,37 +284,44 @@ void CNN<T>::run() {
   CNN<T> cnn;
  
   T eps = (T)0.01;
-  int epoch = 6;
-  int image_num = 10000;
+  int epoch = 20;
+  int image_num = 1000;
 
   for (int k = 0; k < epoch; ++k) {
     for (int i = image_num*k; i < image_num*(k+1); ++i) {
       x.set_v((T*)train_X.ptr_ + i * x.size(1) * x.size(0));
       t.set_v(mnistOneHot<T>(((unsigned long*) train_y.ptr_)[i]));
-      // std::string home = getenv("HOME");
-      // std::stringstream sFile;
-      // sFile << home << "/utokyo-kudohlab/cnn_cpp/data/arithmatic/10E_2_"
-      //       << std::setw(5) << std::setfill('0') << i << ".pb";
-      cnn.simple_train(x, t, eps);
-      // using namespace google::protobuf::io;
-      // std::ofstream output(sFile.str(), std::ofstream::out | std::ofstream::trunc
-      //                      | std::ofstream::binary);
-      // OstreamOutputStream outputFileStream(&output);
-      // GzipOutputStream::Options options;
-      // options.format = GzipOutputStream::GZIP;
-      // options.compression_level = 9;
-      // GzipOutputStream gzip_stream(&outputFileStream, options);
-      // if (!(p.SerializeToZeroCopyStream(&gzip_stream))) {
-      //   std::cerr << "Failed to write values." << std::endl;
-      // }
-      // p.Clear();
+      if (Flags::IsSaveArithmetic()) {
+        std::string home = getenv("HOME");
+        std::stringstream sFile;
+        sFile << home << "/utokyo-kudohlab/cnn_cpp/data/arithmatic/10E_2_"
+              << std::setw(5) << std::setfill('0') << i << ".pb";
+        cnn.simple_train(x, t, eps);
+        using namespace google::protobuf::io;
+        std::ofstream output(sFile.str(), std::ofstream::out | std::ofstream::trunc
+                             | std::ofstream::binary);
+        OstreamOutputStream outputFileStream(&output);
+        GzipOutputStream::Options options;
+        options.format = GzipOutputStream::GZIP;
+        options.compression_level = 9;
+        GzipOutputStream gzip_stream(&outputFileStream, options);
+        if (!(p.SerializeToZeroCopyStream(&gzip_stream))) {
+          std::cerr << "Failed to write values." << std::endl;
+        }
+        p.Clear();
+      }
+      else {
+        cnn.simple_train(x, t, eps);
+      }
+
     }
     int cnt = 0;
     auto start = std::chrono::system_clock::now();
     for (int i = 0; i < 3000; ++i) {
       x.set_v((T*)test_X.ptr_ + i * x.size(1) * x.size(0));
       unsigned long y = cnn.simple_predict(x);
-      // p.Clear();
+      if (Flags::IsSaveArithmetic())
+        p.Clear();
       if (y == ((unsigned long*)test_y.ptr_)[i])
         ++cnt;
     }
@@ -326,10 +334,8 @@ void CNN<T>::run() {
     std::cout << "Epoc: " << k << std::endl;
     std::cout << "Accuracy: " << (float)cnt / (float)3000 << std::endl;
   }
-
-  cnn.simple_save("double_params.pb");
-  free(train_X.ptr_);
-  free(train_y.ptr_);
+  if (Flags::IsSaveParams())
+    cnn.simple_save("float_params.pb");
 
   free(test_X.ptr_);
   free(test_y.ptr_);
@@ -342,7 +348,7 @@ void CNN<T>::inference() {
 
   Tensor2D<28, 28, T> x;
   CNN<T> cnn;
-  cnn.simple_load("half_params.pb");
+  cnn.simple_load("float_params.pb");
   int cnt = 0;
   auto start = std::chrono::system_clock::now();
   for (int i = 0; i < 3000; ++i) {

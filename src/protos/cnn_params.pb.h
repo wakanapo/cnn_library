@@ -142,23 +142,23 @@ class Weight : public ::google::protobuf::Message /* @@protoc_insertion_point(cl
 
   // accessors -------------------------------------------------------
 
-  // repeated double w = 1 [packed = true];
+  // repeated float w = 1 [packed = true];
   int w_size() const;
   void clear_w();
   static const int kWFieldNumber = 1;
-  double w(int index) const;
-  void set_w(int index, double value);
-  void add_w(double value);
-  const ::google::protobuf::RepeatedField< double >&
+  float w(int index) const;
+  void set_w(int index, float value);
+  void add_w(float value);
+  const ::google::protobuf::RepeatedField< float >&
       w() const;
-  ::google::protobuf::RepeatedField< double >*
+  ::google::protobuf::RepeatedField< float >*
       mutable_w();
 
   // @@protoc_insertion_point(class_scope:CnnProto.Weight)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::RepeatedField< double > w_;
+  ::google::protobuf::RepeatedField< float > w_;
   mutable int _w_cached_byte_size_;
   mutable int _cached_size_;
   friend struct protobuf_cnn_5fparams_2eproto::TableStruct;
@@ -246,23 +246,23 @@ class Bias : public ::google::protobuf::Message /* @@protoc_insertion_point(clas
 
   // accessors -------------------------------------------------------
 
-  // repeated double b = 1 [packed = true];
+  // repeated float b = 1 [packed = true];
   int b_size() const;
   void clear_b();
   static const int kBFieldNumber = 1;
-  double b(int index) const;
-  void set_b(int index, double value);
-  void add_b(double value);
-  const ::google::protobuf::RepeatedField< double >&
+  float b(int index) const;
+  void set_b(int index, float value);
+  void add_b(float value);
+  const ::google::protobuf::RepeatedField< float >&
       b() const;
-  ::google::protobuf::RepeatedField< double >*
+  ::google::protobuf::RepeatedField< float >*
       mutable_b();
 
   // @@protoc_insertion_point(class_scope:CnnProto.Bias)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::RepeatedField< double > b_;
+  ::google::protobuf::RepeatedField< float > b_;
   mutable int _b_cached_byte_size_;
   mutable int _cached_size_;
   friend struct protobuf_cnn_5fparams_2eproto::TableStruct;
@@ -395,31 +395,31 @@ class Params : public ::google::protobuf::Message /* @@protoc_insertion_point(cl
 #endif  // __GNUC__
 // Weight
 
-// repeated double w = 1 [packed = true];
+// repeated float w = 1 [packed = true];
 inline int Weight::w_size() const {
   return w_.size();
 }
 inline void Weight::clear_w() {
   w_.Clear();
 }
-inline double Weight::w(int index) const {
+inline float Weight::w(int index) const {
   // @@protoc_insertion_point(field_get:CnnProto.Weight.w)
   return w_.Get(index);
 }
-inline void Weight::set_w(int index, double value) {
+inline void Weight::set_w(int index, float value) {
   w_.Set(index, value);
   // @@protoc_insertion_point(field_set:CnnProto.Weight.w)
 }
-inline void Weight::add_w(double value) {
+inline void Weight::add_w(float value) {
   w_.Add(value);
   // @@protoc_insertion_point(field_add:CnnProto.Weight.w)
 }
-inline const ::google::protobuf::RepeatedField< double >&
+inline const ::google::protobuf::RepeatedField< float >&
 Weight::w() const {
   // @@protoc_insertion_point(field_list:CnnProto.Weight.w)
   return w_;
 }
-inline ::google::protobuf::RepeatedField< double >*
+inline ::google::protobuf::RepeatedField< float >*
 Weight::mutable_w() {
   // @@protoc_insertion_point(field_mutable_list:CnnProto.Weight.w)
   return &w_;
@@ -429,31 +429,31 @@ Weight::mutable_w() {
 
 // Bias
 
-// repeated double b = 1 [packed = true];
+// repeated float b = 1 [packed = true];
 inline int Bias::b_size() const {
   return b_.size();
 }
 inline void Bias::clear_b() {
   b_.Clear();
 }
-inline double Bias::b(int index) const {
+inline float Bias::b(int index) const {
   // @@protoc_insertion_point(field_get:CnnProto.Bias.b)
   return b_.Get(index);
 }
-inline void Bias::set_b(int index, double value) {
+inline void Bias::set_b(int index, float value) {
   b_.Set(index, value);
   // @@protoc_insertion_point(field_set:CnnProto.Bias.b)
 }
-inline void Bias::add_b(double value) {
+inline void Bias::add_b(float value) {
   b_.Add(value);
   // @@protoc_insertion_point(field_add:CnnProto.Bias.b)
 }
-inline const ::google::protobuf::RepeatedField< double >&
+inline const ::google::protobuf::RepeatedField< float >&
 Bias::b() const {
   // @@protoc_insertion_point(field_list:CnnProto.Bias.b)
   return b_;
 }
-inline ::google::protobuf::RepeatedField< double >*
+inline ::google::protobuf::RepeatedField< float >*
 Bias::mutable_b() {
   // @@protoc_insertion_point(field_mutable_list:CnnProto.Bias.b)
   return &b_;

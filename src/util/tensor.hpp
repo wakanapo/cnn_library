@@ -10,7 +10,7 @@ template<int dim1, int dim2, int dim3, int dim4, int dim5, typename T>
 class Tensor {
 private:
   static constexpr int size_ = dim1*dim2*dim3*dim4*dim5;
-  static constexpr int shape_[] = {dim1, dim2, dim3, dim4, dim5};
+  int shape_[5] = {dim1, dim2, dim3, dim4, dim5};
   T v_[size_] = {};
 public:
   int size(int axis) const;

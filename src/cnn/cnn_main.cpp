@@ -1,15 +1,27 @@
 #include <cstdio>
 
+#include "util/flags.hpp"
 #include "util/read_data.hpp"
 #include "cnn/cnn.hpp"
 // #include "util/types.hpp"
 #include "half.hpp"
+#include "util/box_quant.hpp"
 
 using half_float::half;
-int main() {
-  // TODO(wakanapo): Make it switchable with runtime flag.
-  CNN<float>::run();
-  // CNN<half>::inference();
+int main(int argc, char* argv[]) {
+  Flags::ParseCommandLine(argc, argv);
+  if (Flags::GetType() == HALF) {
+    if (Flags::IsTrain())
+      CNN<half>::run();
+    else
+      CNN<half>::inference();
+  }
+  else {
+    if (Flags::IsTrain())
+      CNN<float>::run();
+    else
+      CNN<float>::inference();
+  }
   return 0;
 }
   
